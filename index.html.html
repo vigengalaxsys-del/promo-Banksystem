@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bank System — Business Case Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --white: #ffffff;
+  --bg: #f4f6f9;
+  --surface: #ffffff;
+  --border: #e2e8f0;
+  --border-light: #f0f3f7;
+  --text: #1a202c;
+  --text-secondary: #4a5568;
+  --text-muted: #94a3b8;
+  --blue: #3b6ef8;
+  --blue-light: #ebf0ff;
+  --blue-mid: #c7d4fd;
+  --green: #0d9f6e;
+  --green-light: #e6f7f2;
+  --orange: #e8720c;
+  --orange-light: #fff0e6;
+  --red: #e53e3e;
+  --red-light: #fff5f5;
+  --violet: #7c3aed;
+  --violet-light: #f3eeff;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow: 0 4px 16px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.10);
+  --radius: 14px;
+  --radius-sm: 8px;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* TOPBAR */
+.topbar {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow-sm);
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-mark {
+  width: 36px; height: 36px;
+  background: var(--blue);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.topbar-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 18px;
+  color: var(--text);
+  letter-spacing: -0.3px;
+}
+
+.topbar-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.topbar-badge {
+  background: var(--blue-light);
+  color: var(--blue);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.3px;
+}
+
+/* PAGE LAYOUT */
+.page {
+  max-width: 1340px;
+  margin: 0 auto;
+  padding: 28px 28px 60px;
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .page { grid-template-columns: 1fr; padding: 20px; }
+}
+
+/* LEFT COLUMN: INPUTS */
+.input-panel {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  position: sticky;
+  top: 88px;
+}
+
+.input-panel-header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.input-panel-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.input-body { padding: 20px 24px 24px; }
+
+/* SECTION GROUPS */
+.input-group {
+  margin-bottom: 24px;
+}
+
+.group-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+}
+
+.group-label-icon {
+  width: 20px; height: 20px;
+  border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+}
+
+.group-label-icon.blue { background: var(--blue-light); }
+.group-label-icon.green { background: var(--green-light); }
+.group-label-icon.orange { background: var(--orange-light); }
+
+.group-label-line {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* INPUT FIELDS */
+.field { margin-bottom: 12px; }
+
+.field-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 5px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.field-label .sub { color: var(--text-muted); font-weight: 400; }
+
+.input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-affix {
+  position: absolute;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  pointer-events: none;
+  user-select: none;
+}
+
+.input-affix.left { left: 11px; }
+.input-affix.right { right: 11px; }
+
+input[type="number"] {
+  width: 100%;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 9px 36px 9px 28px;
+  outline: none;
+  transition: border-color 0.18s, background 0.18s;
+  -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+input[type="number"]:focus {
+  border-color: var(--blue);
+  background: var(--white);
+  box-shadow: 0 0 0 3px rgba(59,110,248,0.1);
+}
+
+/* SLIDER */
+.slider-field { margin-bottom: 12px; }
+
+.slider-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.slider-name { font-size: 12px; font-weight: 500; color: var(--text-secondary); }
+
+.slider-badge {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--blue);
+  background: var(--blue-light);
+  padding: 2px 9px;
+  border-radius: 20px;
+  min-width: 48px;
+  text-align: center;
+}
+
+input[type="range"] {
+  width: 100%;
+  height: 5px;
+  -webkit-appearance: none;
+  background: var(--border);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+  border: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--white);
+  border: 2.5px solid var(--blue);
+  box-shadow: 0 1px 4px rgba(59,110,248,0.3);
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+
+/* DIVIDER */
+.divider { height: 1px; background: var(--border-light); margin: 20px 0; }
+
+/* CALC BUTTON */
+.calc-btn {
+  width: 100%;
+  padding: 13px 20px;
+  background: var(--blue);
+  color: white;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.18s, transform 0.12s, box-shadow 0.18s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.calc-btn:hover {
+  background: #2d5ee0;
+  box-shadow: 0 4px 14px rgba(59,110,248,0.35);
+  transform: translateY(-1px);
+}
+
+.calc-btn:active { transform: translateY(0); }
+
+/* RIGHT COLUMN */
+.output-col { display: flex; flex-direction: column; gap: 20px; }
+
+/* EMPTY STATE */
+.empty-panel {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 64px 32px;
+  text-align: center;
+}
+
+.empty-icon { font-size: 44px; margin-bottom: 16px; opacity: 0.5; }
+.empty-h { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--text-secondary); margin-bottom: 8px; }
+.empty-p { font-size: 13px; color: var(--text-muted); line-height: 1.7; }
+
+/* RESULT SECTIONS */
+/* KPI ROW */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+@media (max-width: 700px) { .kpi-row { grid-template-columns: 1fr 1fr; } }
+
+.kpi-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px 18px 16px;
+  border-top: 3px solid transparent;
+  transition: transform 0.18s, box-shadow 0.18s;
+}
+
+.kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.kpi-card.blue { border-top-color: var(--blue); }
+.kpi-card.green { border-top-color: var(--green); }
+.kpi-card.orange { border-top-color: var(--orange); }
+.kpi-card.violet { border-top-color: var(--violet); }
+.kpi-card.red { border-top-color: var(--red); }
+
+.kpi-icon {
+  width: 34px; height: 34px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+
+.kpi-card.blue .kpi-icon { background: var(--blue-light); }
+.kpi-card.green .kpi-icon { background: var(--green-light); }
+.kpi-card.orange .kpi-icon { background: var(--orange-light); }
+.kpi-card.violet .kpi-icon { background: var(--violet-light); }
+.kpi-card.red .kpi-icon { background: var(--red-light); }
+
+.kpi-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.7px; color: var(--text-muted); margin-bottom: 4px; }
+
+.kpi-value {
+  font-family: 'DM Serif Display', serif;
+  font-size: 28px;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.kpi-card.blue .kpi-value { color: var(--blue); }
+.kpi-card.green .kpi-value { color: var(--green); }
+.kpi-card.orange .kpi-value { color: var(--orange); }
+.kpi-card.violet .kpi-value { color: var(--violet); }
+.kpi-card.red .kpi-value { color: var(--red); }
+
+.kpi-sub { font-size: 12px; color: var(--text-muted); }
+.kpi-sub .pos { color: var(--green); font-weight: 600; }
+.kpi-sub .neg { color: var(--red); font-weight: 600; }
+
+/* CARD WRAPPER */
+.card {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-header-icon {
+  width: 28px; height: 28px;
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+}
+
+.card-header-icon.blue { background: var(--blue-light); }
+.card-header-icon.green { background: var(--green-light); }
+.card-header-icon.orange { background: var(--orange-light); }
+.card-header-icon.violet { background: var(--violet-light); }
+
+.card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.card-body { padding: 18px 22px; }
+
+/* COMPARISON TABLE */
+.cmp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.cmp-table thead th {
+  padding: 8px 14px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--text-muted);
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.cmp-table thead th:first-child { border-radius: 6px 0 0 0; }
+.cmp-table thead th:last-child { border-radius: 0 6px 0 0; }
+
+.cmp-table tbody td {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--border-light);
+  vertical-align: middle;
+}
+
+.cmp-table tbody tr:last-child td { border-bottom: none; }
+.cmp-table tbody tr:hover td { background: #fafbfd; }
+
+.cmp-metric { font-weight: 500; color: var(--text); }
+.cmp-baseline { color: var(--text-muted); font-size: 13px; }
+.cmp-promo { font-weight: 600; color: var(--text); }
+.delta-pos { color: var(--green); font-weight: 700; font-size: 13px; }
+.delta-neg { color: var(--red); font-weight: 700; font-size: 13px; }
+.delta-neutral { color: var(--text-muted); font-size: 13px; }
+
+/* TWO COL LAYOUT */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+
+/* BAR CHART */
+.bar-section { margin-bottom: 18px; }
+.bar-section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.7px; color: var(--text-muted); margin-bottom: 10px; }
+
+.bar-item { margin-bottom: 10px; }
+
+.bar-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.bar-name { font-size: 12px; color: var(--text-secondary); font-weight: 500; }
+.bar-num { font-size: 12px; font-weight: 700; color: var(--text); }
+
+.bar-track {
+  height: 8px;
+  background: var(--border-light);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.7s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.bar-fill.base { background: #cbd5e1; }
+.bar-fill.promo-b { background: linear-gradient(90deg, var(--blue) 0%, #6b9ffe 100%); }
+.bar-fill.promo-g { background: linear-gradient(90deg, var(--green) 0%, #34d3a0 100%); }
+
+/* COST LIST */
+.cost-list { display: flex; flex-direction: column; }
+
+.cost-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-light);
+  gap: 12px;
+}
+
+.cost-item:last-child { border-bottom: none; }
+.cost-item.total { padding-top: 14px; border-top: 2px solid var(--border); border-bottom: none; margin-top: 4px; }
+
+.cost-name { font-size: 13px; color: var(--text-secondary); }
+.cost-val { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; }
+.cost-item.total .cost-name { font-weight: 700; color: var(--text); font-size: 14px; }
+.cost-item.total .cost-val { font-size: 16px; color: var(--green); font-family: 'DM Serif Display', serif; }
+.cost-item .tag { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 12px; }
+.tag.pos { background: var(--green-light); color: var(--green); }
+.tag.neg { background: var(--red-light); color: var(--red); }
+
+/* INSIGHTS */
+.insight-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.insight-item {
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 14px 16px;
+  border-left: 3px solid transparent;
+}
+
+.insight-item.blue { border-left-color: var(--blue); }
+.insight-item.green { border-left-color: var(--green); }
+.insight-item.orange { border-left-color: var(--orange); }
+.insight-item.violet { border-left-color: var(--violet); }
+
+.insight-title { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 5px; display: flex; align-items: center; gap: 6px; }
+.insight-body { font-size: 12px; color: var(--text-secondary); line-height: 1.55; }
+
+/* FLOW STEPS */
+.flow-steps { display: flex; flex-direction: column; gap: 0; }
+
+.flow-step {
+  display: flex;
+  gap: 14px;
+  padding-bottom: 18px;
+  position: relative;
+}
+
+.flow-step:last-child { padding-bottom: 0; }
+
+.flow-step::before {
+  content: '';
+  position: absolute;
+  left: 14px;
+  top: 30px;
+  bottom: 0;
+  width: 1.5px;
+  background: var(--border);
+}
+
+.flow-step:last-child::before { display: none; }
+
+.step-num {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.step-body { padding-top: 4px; }
+.step-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+.step-text { font-size: 12px; color: var(--text-secondary); line-height: 1.55; }
+
+/* ROI SUMMARY BANNER */
+.roi-banner {
+  background: linear-gradient(135deg, #1a56db 0%, #3b6ef8 50%, #6b9ffe 100%);
+  border-radius: var(--radius);
+  padding: 24px 28px;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  box-shadow: 0 6px 24px rgba(59,110,248,0.3);
+}
+
+.roi-left .roi-main-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; margin-bottom: 4px; }
+.roi-left .roi-main-val { font-family: 'DM Serif Display', serif; font-size: 42px; line-height: 1; }
+.roi-left .roi-main-sub { font-size: 12px; opacity: 0.75; margin-top: 4px; }
+
+.roi-stats { display: flex; gap: 32px; flex-wrap: wrap; }
+.roi-stat { text-align: center; }
+.roi-stat-val { font-family: 'DM Serif Display', serif; font-size: 22px; margin-bottom: 2px; }
+.roi-stat-label { font-size: 11px; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* FORMULA DRAWER */
+.formula-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 10px 22px;
+  border-top: 1px solid var(--border-light);
+  background: none;
+  border-left: none; border-right: none; border-bottom: none;
+  width: 100%;
+  text-align: left;
+  transition: color 0.15s, background 0.15s;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.formula-toggle:hover { color: var(--blue); background: var(--bg); }
+
+.formula-toggle .arrow {
+  display: inline-block;
+  transition: transform 0.2s;
+  font-style: normal;
+}
+
+.formula-toggle.open .arrow { transform: rotate(90deg); }
+
+.formula-drawer {
+  display: none;
+  background: #f8faff;
+  border-top: 1px solid var(--border-light);
+  padding: 16px 22px 18px;
+}
+
+.formula-drawer.open { display: block; }
+
+.formula-block {
+  margin-bottom: 14px;
+}
+
+.formula-block:last-child { margin-bottom: 0; }
+
+.formula-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.formula-eq {
+  font-family: 'DM Serif Display', serif;
+  font-size: 13px;
+  color: var(--blue);
+  background: var(--blue-light);
+  border-radius: 6px;
+  padding: 7px 11px;
+  margin-bottom: 4px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.formula-eq .op { color: var(--text-muted); font-family: 'DM Sans', sans-serif; font-size: 12px; }
+.formula-eq .val { color: var(--orange); }
+.formula-eq .result { color: var(--green); font-weight: 700; }
+
+.formula-plain {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+/* KPI card formula variant */
+.kpi-formula-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+  background: none;
+  border-left: none; border-right: none; border-bottom: none;
+  width: 100%;
+  text-align: left;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  font-family: 'DM Sans', sans-serif;
+  transition: color 0.15s;
+}
+
+.kpi-formula-toggle:hover { color: var(--blue); }
+.kpi-formula-toggle .arrow { display: inline-block; transition: transform 0.2s; }
+.kpi-formula-toggle.open .arrow { transform: rotate(90deg); }
+
+.kpi-formula-body {
+  display: none;
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  background: var(--bg);
+  border-radius: 6px;
+  padding: 8px 10px;
+  line-height: 1.6;
+}
+
+.kpi-formula-body.open { display: block; }
+.kpi-formula-body .feq { font-family: 'DM Serif Display', serif; color: var(--blue); display: block; margin-bottom: 3px; font-size: 12px; }
+.kpi-formula-body .fex { color: var(--text-muted); font-size: 11px; }
+
+/* ANIMATION */
+@keyframes fadeSlide {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.anim { opacity: 0; }
+.anim.go { animation: fadeSlide 0.35s ease forwards; }
+.anim:nth-child(1).go { animation-delay: 0s; }
+.anim:nth-child(2).go { animation-delay: 0.05s; }
+.anim:nth-child(3).go { animation-delay: 0.1s; }
+.anim:nth-child(4).go { animation-delay: 0.15s; }
+.anim:nth-child(5).go { animation-delay: 0.2s; }
+.anim:nth-child(6).go { animation-delay: 0.25s; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo-mark">🏦</div>
+    <div>
+      <div class="topbar-title">Bank System</div>
+      <div class="topbar-sub">Business Case Calculator</div>
+    </div>
+  </div>
+  <div class="topbar-badge">Promo ROI Tool</div>
+</div>
+
+<div class="page">
+
+  <!-- LEFT: INPUTS -->
+  <div class="input-panel">
+    <div class="input-panel-header">
+      <div class="input-panel-title">Configure Parameters</div>
+    </div>
+    <div class="input-body">
+
+      <!-- PLAYER BASE -->
+      <div class="input-group">
+        <div class="group-label">
+          <span class="group-label-icon blue">👥</span>
+          Player Base
+          <span class="group-label-line"></span>
+        </div>
+
+        <div class="field">
+          <div class="field-label"><span>Active Players per Period</span></div>
+          <div class="input-wrap">
+            <span class="input-affix left">#</span>
+            <input type="number" id="activePlayers" value="5000" min="100" step="100">
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label"><span>Avg Bets per Player per Period</span></div>
+          <div class="input-wrap">
+            <span class="input-affix left">#</span>
+            <input type="number" id="avgBets" value="80" min="1">
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label"><span>Avg Bet Amount (Baseline)</span></div>
+          <div class="input-wrap">
+            <span class="input-affix left">$</span>
+            <input type="number" id="avgBetAmount" value="5.00" min="0.1" step="0.1">
+          </div>
+        </div>
+
+        <div class="slider-field">
+          <div class="slider-top">
+            <span class="slider-name">Casino GGR Margin</span>
+            <span class="slider-badge" id="ggrMarginVal">5.0%</span>
+          </div>
+          <input type="range" id="ggrMargin" min="1" max="15" step="0.5" value="5">
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- PROMO MECHANICS -->
+      <div class="input-group">
+        <div class="group-label">
+          <span class="group-label-icon orange">⚙️</span>
+          Bank System Mechanics
+          <span class="group-label-line"></span>
+        </div>
+
+        <div class="field">
+          <div class="field-label"><span>Bet Threshold to Qualify</span><span class="sub">cumulative</span></div>
+          <div class="input-wrap">
+            <span class="input-affix left">$</span>
+            <input type="number" id="betThreshold" value="300" min="10" step="10">
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label"><span>Number of Banks Available</span></div>
+          <div class="input-wrap">
+            <span class="input-affix left">#</span>
+            <input type="number" id="numBanks" value="20" min="1">
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label"><span>Bank Prize Amount (each)</span></div>
+          <div class="input-wrap">
+            <span class="input-affix left">$</span>
+            <input type="number" id="bankAmount" value="500" min="10" step="10">
+          </div>
+        </div>
+
+        <div class="slider-field">
+          <div class="slider-top">
+            <span class="slider-name">Expected Bet Uplift</span>
+            <span class="slider-badge" id="betUpliftVal">20%</span>
+          </div>
+          <input type="range" id="betUplift" min="0" max="60" step="1" value="20">
+        </div>
+
+        <div class="slider-field">
+          <div class="slider-top">
+            <span class="slider-name">Player Participation Rate</span>
+            <span class="slider-badge" id="participationRateVal">35%</span>
+          </div>
+          <input type="range" id="participationRate" min="5" max="80" step="1" value="35">
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- CAMPAIGN -->
+      <div class="input-group">
+        <div class="group-label">
+          <span class="group-label-icon green">📅</span>
+          Campaign Period
+          <span class="group-label-line"></span>
+        </div>
+
+        <div class="field">
+          <div class="field-label"><span>Campaign Duration</span></div>
+          <div class="input-wrap">
+            <span class="input-affix left">#</span>
+            <input type="number" id="campaignDays" value="30" min="1" max="365">
+            <span class="input-affix right">days</span>
+          </div>
+        </div>
+
+        <div class="slider-field">
+          <div class="slider-top">
+            <span class="slider-name">Player Retention Uplift</span>
+            <span class="slider-badge" id="retentionUpliftVal">8%</span>
+          </div>
+          <input type="range" id="retentionUplift" min="0" max="25" step="1" value="8">
+        </div>
+      </div>
+
+      <button class="calc-btn" onclick="calculate()">
+        <span>📊</span> Calculate Business Case
+      </button>
+    </div>
+  </div>
+
+  <!-- RIGHT: OUTPUTS -->
+  <div class="output-col" id="outputCol">
+    <div class="empty-panel">
+      <div class="empty-icon">📈</div>
+      <div class="empty-h">Ready to Calculate</div>
+      <div class="empty-p">Fill in your parameters on the left and click<br><strong>Calculate Business Case</strong> to see the full impact analysis.</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function bindSlider(id, valId, suffix) {
+  const el = document.getElementById(id);
+  const disp = document.getElementById(valId);
+  const update = () => {
+    const v = parseFloat(el.value);
+    disp.textContent = v.toFixed(1) + suffix;
+    // gradient fill
+    const pct = ((v - el.min) / (el.max - el.min)) * 100;
+    el.style.background = `linear-gradient(90deg, #3b6ef8 ${pct}%, #e2e8f0 ${pct}%)`;
+  };
+  el.addEventListener('input', update);
+  update();
+}
+
+bindSlider('ggrMargin', 'ggrMarginVal', '%');
+bindSlider('betUplift', 'betUpliftVal', '%');
+bindSlider('participationRate', 'participationRateVal', '%');
+bindSlider('retentionUplift', 'retentionUpliftVal', '%');
+
+function fmt(n, d = 0) { return n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); }
+
+function fmtMoney(n) {
+  const abs = Math.abs(n);
+  const sign = n < 0 ? '-' : '';
+  if (abs >= 1000000) return sign + '$' + fmt(abs / 1000000, 2) + 'M';
+  if (abs >= 1000) return sign + '$' + fmt(abs / 1000, 1) + 'K';
+  return sign + '$' + fmt(abs, 0);
+}
+
+function pct(n) { return (n >= 0 ? '+' : '') + n.toFixed(1) + '%'; }
+
+function calculate() {
+  const activePlayers   = +document.getElementById('activePlayers').value;
+  const avgBets         = +document.getElementById('avgBets').value;
+  const avgBetAmount    = +document.getElementById('avgBetAmount').value;
+  const ggrMargin       = +document.getElementById('ggrMargin').value / 100;
+  const betThreshold    = +document.getElementById('betThreshold').value;
+  const numBanks        = +document.getElementById('numBanks').value;
+  const bankAmount      = +document.getElementById('bankAmount').value;
+  const betUplift       = +document.getElementById('betUplift').value / 100;
+  const participationRate = +document.getElementById('participationRate').value / 100;
+  const retentionUplift = +document.getElementById('retentionUplift').value / 100;
+
+  // --- CALCULATIONS ---
+  const baselineBetVol  = activePlayers * avgBets * avgBetAmount;
+  const baselineGGR     = baselineBetVol * ggrMargin;
+
+  const promoPlayers    = Math.round(activePlayers * participationRate);
+  const nonPromoPlayers = activePlayers - promoPlayers;
+  const promoAvgBet     = avgBetAmount * (1 + betUplift);
+
+  const promoBetVol     = promoPlayers * avgBets * promoAvgBet;
+  const nonPromoBetVol  = nonPromoPlayers * avgBets * avgBetAmount;
+  const totalPromoBetVol = promoBetVol + nonPromoBetVol;
+
+  const avgPromoPlayerWager = avgBets * promoAvgBet;
+  const qualifyingFrac  = Math.min(1, avgPromoPlayerWager / betThreshold);
+  const qualifyingPlayers = Math.round(promoPlayers * qualifyingFrac);
+  const prizesAwarded   = Math.min(qualifyingPlayers, numBanks);
+  const totalPrizeCost  = prizesAwarded * bankAmount;
+
+  const rawPromoGGR     = totalPromoBetVol * ggrMargin;
+  const retainedPlayers = Math.round(activePlayers * retentionUplift);
+  const retentionValue  = retainedPlayers * avgBets * avgBetAmount * ggrMargin * 0.3;
+  const netPromoGGR     = rawPromoGGR - totalPrizeCost + retentionValue;
+
+  const ggrDelta        = netPromoGGR - baselineGGR;
+  const ggrDeltaPct     = (ggrDelta / baselineGGR) * 100;
+  const betVolDeltaPct  = ((totalPromoBetVol - baselineBetVol) / baselineBetVol) * 100;
+  const blendedAvgBet   = totalPromoBetVol / (activePlayers * avgBets);
+  const avgBetDeltaPct  = ((blendedAvgBet - avgBetAmount) / avgBetAmount) * 100;
+  const roi             = totalPrizeCost > 0 ? (ggrDelta / totalPrizeCost) * 100 : 999;
+  const roiDisplay      = roi >= 999 ? '∞' : roi.toFixed(0) + '%';
+  const costPerPlayer   = qualifyingPlayers > 0 ? totalPrizeCost / qualifyingPlayers : 0;
+
+  // --- RENDER ---
+  const col = document.getElementById('outputCol');
+  col.innerHTML = '';
+
+  function addSection(html, delay) {
+    const wrap = document.createElement('div');
+    wrap.className = 'anim';
+    wrap.innerHTML = html;
+    col.appendChild(wrap);
+    setTimeout(() => wrap.classList.add('go'), delay);
+  }
+
+  // Toggle helper — attached after render
+  function bindToggles() {
+    document.querySelectorAll('.formula-toggle').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const drawer = btn.nextElementSibling;
+        btn.classList.toggle('open');
+        drawer.classList.toggle('open');
+      });
+    });
+    document.querySelectorAll('.kpi-formula-toggle').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const body = btn.nextElementSibling;
+        btn.classList.toggle('open');
+        body.classList.toggle('open');
+      });
+    });
+  }
+
+  // Shorthand for formula blocks
+  const n = (v) => `<span class="val">${v}</span>`;
+  const r = (v) => `<span class="result">${v}</span>`;
+
+  // 1 — ROI BANNER
+  addSection(`
+    <div class="roi-banner">
+      <div class="roi-left">
+        <div class="roi-main-label">Return on Promo Investment</div>
+        <div class="roi-main-val">${roiDisplay}</div>
+        <div class="roi-main-sub">Net GGR gain ÷ total promo spend</div>
+      </div>
+      <div class="roi-stats">
+        <div class="roi-stat">
+          <div class="roi-stat-val">${fmtMoney(ggrDelta)}</div>
+          <div class="roi-stat-label">Net GGR Gain</div>
+        </div>
+        <div class="roi-stat">
+          <div class="roi-stat-val">${fmtMoney(totalPrizeCost)}</div>
+          <div class="roi-stat-label">Promo Cost</div>
+        </div>
+        <div class="roi-stat">
+          <div class="roi-stat-val">+${avgBetDeltaPct.toFixed(1)}%</div>
+          <div class="roi-stat-label">Avg Bet Lift</div>
+        </div>
+      </div>
+    </div>
+  `, 0);
+
+  // 2 — KPI CARDS (each with inline formula toggle)
+  addSection(`
+    <div class="kpi-row">
+
+      <div class="kpi-card green">
+        <div class="kpi-icon">💰</div>
+        <div class="kpi-label">Net GGR (with promo)</div>
+        <div class="kpi-value">${fmtMoney(netPromoGGR)}</div>
+        <div class="kpi-sub"><span class="${ggrDeltaPct >= 0 ? 'pos' : 'neg'}">${pct(ggrDeltaPct)}</span> vs baseline ${fmtMoney(baselineGGR)}</div>
+        <button class="kpi-formula-toggle"><span class="arrow">▶</span> How it's calculated</button>
+        <div class="kpi-formula-body">
+          <span class="feq">Raw GGR − Prize Cost + Retention GGR</span>
+          <span class="fex">${fmtMoney(rawPromoGGR)} − ${fmtMoney(totalPrizeCost)} + ${fmtMoney(retentionValue)} = <strong>${fmtMoney(netPromoGGR)}</strong></span>
+        </div>
+      </div>
+
+      <div class="kpi-card blue">
+        <div class="kpi-icon">🎲</div>
+        <div class="kpi-label">Total Bet Volume</div>
+        <div class="kpi-value">${fmtMoney(totalPromoBetVol)}</div>
+        <div class="kpi-sub"><span class="pos">${pct(betVolDeltaPct)}</span> vs ${fmtMoney(baselineBetVol)}</div>
+        <button class="kpi-formula-toggle"><span class="arrow">▶</span> How it's calculated</button>
+        <div class="kpi-formula-body">
+          <span class="feq">(Promo players × bets × promo bet) + (Non-promo players × bets × base bet)</span>
+          <span class="fex">(${fmt(promoPlayers)} × ${avgBets} × $${promoAvgBet.toFixed(2)}) + (${fmt(nonPromoPlayers)} × ${avgBets} × $${avgBetAmount.toFixed(2)}) = <strong>${fmtMoney(totalPromoBetVol)}</strong></span>
+        </div>
+      </div>
+
+      <div class="kpi-card orange">
+        <div class="kpi-icon">📐</div>
+        <div class="kpi-label">Avg Bet Amount</div>
+        <div class="kpi-value">$${blendedAvgBet.toFixed(2)}</div>
+        <div class="kpi-sub"><span class="pos">+${avgBetDeltaPct.toFixed(1)}%</span> vs $${avgBetAmount.toFixed(2)} baseline</div>
+        <button class="kpi-formula-toggle"><span class="arrow">▶</span> How it's calculated</button>
+        <div class="kpi-formula-body">
+          <span class="feq">Total Bet Volume ÷ (All players × bets per player)</span>
+          <span class="fex">${fmtMoney(totalPromoBetVol)} ÷ (${fmt(activePlayers)} × ${avgBets}) = <strong>$${blendedAvgBet.toFixed(2)}</strong></span>
+          <span class="fex" style="margin-top:4px;display:block;">Blended across promo players (bet $${promoAvgBet.toFixed(2)}) and non-promo players (bet $${avgBetAmount.toFixed(2)}).</span>
+        </div>
+      </div>
+
+      <div class="kpi-card violet">
+        <div class="kpi-icon">🏆</div>
+        <div class="kpi-label">Qualifying Players</div>
+        <div class="kpi-value">${fmt(qualifyingPlayers)}</div>
+        <div class="kpi-sub">${fmt(prizesAwarded)} of ${fmt(numBanks)} banks claimed</div>
+        <button class="kpi-formula-toggle"><span class="arrow">▶</span> How it's calculated</button>
+        <div class="kpi-formula-body">
+          <span class="feq">Avg promo player wager ÷ Threshold (capped at 100%)</span>
+          <span class="fex">Avg wager = ${avgBets} bets × $${promoAvgBet.toFixed(2)} = ${fmtMoney(avgPromoPlayerWager)}</span>
+          <span class="fex" style="margin-top:3px;display:block;">Qualifying rate = min(${fmtMoney(avgPromoPlayerWager)} ÷ $${betThreshold}, 100%) = ${(qualifyingFrac*100).toFixed(0)}%</span>
+          <span class="fex" style="margin-top:3px;display:block;">${fmt(promoPlayers)} promo players × ${(qualifyingFrac*100).toFixed(0)}% = <strong>${fmt(qualifyingPlayers)}</strong></span>
+        </div>
+      </div>
+
+      <div class="kpi-card red">
+        <div class="kpi-icon">🏷️</div>
+        <div class="kpi-label">Promo Prize Cost</div>
+        <div class="kpi-value">${fmtMoney(totalPrizeCost)}</div>
+        <div class="kpi-sub">${fmtMoney(costPerPlayer)} per qualifying player</div>
+        <button class="kpi-formula-toggle"><span class="arrow">▶</span> How it's calculated</button>
+        <div class="kpi-formula-body">
+          <span class="feq">Banks Awarded × Prize per Bank</span>
+          <span class="fex">Banks awarded = min(qualifying players, banks available) = min(${fmt(qualifyingPlayers)}, ${fmt(numBanks)}) = ${fmt(prizesAwarded)}</span>
+          <span class="fex" style="margin-top:3px;display:block;">${fmt(prizesAwarded)} × $${bankAmount} = <strong>${fmtMoney(totalPrizeCost)}</strong></span>
+        </div>
+      </div>
+
+      <div class="kpi-card green">
+        <div class="kpi-icon">🔁</div>
+        <div class="kpi-label">Retention Bonus GGR</div>
+        <div class="kpi-value">${fmtMoney(retentionValue)}</div>
+        <div class="kpi-sub">${fmt(retainedPlayers)} additional players retained</div>
+        <button class="kpi-formula-toggle"><span class="arrow">▶</span> How it's calculated</button>
+        <div class="kpi-formula-body">
+          <span class="feq">Retained players × Bets × Avg bet × GGR margin × 30%</span>
+          <span class="fex">${fmt(retainedPlayers)} × ${avgBets} × $${avgBetAmount.toFixed(2)} × ${(ggrMargin*100).toFixed(1)}% × 30% = <strong>${fmtMoney(retentionValue)}</strong></span>
+          <span class="fex" style="margin-top:3px;display:block;">30% factor = conservative estimate of forward-period value each retained player generates.</span>
+        </div>
+      </div>
+
+    </div>
+  `, 50);
+
+  // 3 — COMPARISON TABLE
+  const maxBet = Math.max(baselineBetVol, totalPromoBetVol);
+  const maxGGR = Math.max(baselineGGR, netPromoGGR, 1);
+
+  addSection(`
+    <div class="card">
+      <div class="card-header">
+        <div class="card-header-icon blue">📋</div>
+        <div class="card-title">Baseline vs Promo — Full Comparison</div>
+      </div>
+      <div class="card-body" style="padding:0">
+        <table class="cmp-table">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Baseline</th>
+              <th>With Promo</th>
+              <th>Change</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="cmp-metric">Total Bet Volume</td>
+              <td class="cmp-baseline">${fmtMoney(baselineBetVol)}</td>
+              <td class="cmp-promo">${fmtMoney(totalPromoBetVol)}</td>
+              <td class="delta-pos">${pct(betVolDeltaPct)}</td>
+            </tr>
+            <tr>
+              <td class="cmp-metric">Gross GGR (before prizes)</td>
+              <td class="cmp-baseline">${fmtMoney(baselineGGR)}</td>
+              <td class="cmp-promo">${fmtMoney(rawPromoGGR)}</td>
+              <td class="delta-pos">${pct(((rawPromoGGR-baselineGGR)/baselineGGR)*100)}</td>
+            </tr>
+            <tr>
+              <td class="cmp-metric">Net GGR (after prizes)</td>
+              <td class="cmp-baseline">${fmtMoney(baselineGGR)}</td>
+              <td class="cmp-promo">${fmtMoney(netPromoGGR)}</td>
+              <td class="${ggrDeltaPct>=0?'delta-pos':'delta-neg'}">${pct(ggrDeltaPct)}</td>
+            </tr>
+            <tr>
+              <td class="cmp-metric">Avg Bet per Player</td>
+              <td class="cmp-baseline">$${avgBetAmount.toFixed(2)}</td>
+              <td class="cmp-promo">$${blendedAvgBet.toFixed(2)}</td>
+              <td class="delta-pos">${pct(avgBetDeltaPct)}</td>
+            </tr>
+            <tr>
+              <td class="cmp-metric">Players Participating</td>
+              <td class="cmp-baseline">—</td>
+              <td class="cmp-promo">${fmt(promoPlayers)} (${(participationRate*100).toFixed(0)}%)</td>
+              <td class="delta-neutral">of ${fmt(activePlayers)}</td>
+            </tr>
+            <tr>
+              <td class="cmp-metric">Players Retained (extra)</td>
+              <td class="cmp-baseline">—</td>
+              <td class="cmp-promo">${fmt(retainedPlayers)}</td>
+              <td class="delta-pos">+${(retentionUplift*100).toFixed(0)}%</td>
+            </tr>
+            <tr>
+              <td class="cmp-metric">Promo ROI</td>
+              <td class="cmp-baseline">—</td>
+              <td class="cmp-promo">${roiDisplay}</td>
+              <td class="${roi >= 0 ? 'delta-pos' : 'delta-neg'}">${roi >= 100 ? 'Strong' : roi >= 0 ? 'Positive' : 'Negative'}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button class="formula-toggle"><span class="arrow">▶</span>&nbsp;&nbsp;Show calculation logic for all metrics</button>
+      <div class="formula-drawer">
+        <div class="formula-block">
+          <div class="formula-name">Baseline Bet Volume</div>
+          <div class="formula-eq">All Players × Avg Bets × Avg Bet Amount<br><span class="op">= </span>${n(fmt(activePlayers))} × ${n(avgBets)} × ${n('$'+avgBetAmount.toFixed(2))} = ${r(fmtMoney(baselineBetVol))}</div>
+          <div class="formula-plain">The total amount wagered across all players in a period without any promo running.</div>
+        </div>
+        <div class="formula-block">
+          <div class="formula-name">Baseline GGR</div>
+          <div class="formula-eq">Baseline Bet Volume × GGR Margin<br><span class="op">= </span>${n(fmtMoney(baselineBetVol))} × ${n((ggrMargin*100).toFixed(1)+'%')} = ${r(fmtMoney(baselineGGR))}</div>
+          <div class="formula-plain">The casino's gross gaming revenue — the house edge applied to total bets placed.</div>
+        </div>
+        <div class="formula-block">
+          <div class="formula-name">Gross GGR with Promo (before prizes)</div>
+          <div class="formula-eq">Total Promo Bet Volume × GGR Margin<br><span class="op">= </span>${n(fmtMoney(totalPromoBetVol))} × ${n((ggrMargin*100).toFixed(1)+'%')} = ${r(fmtMoney(rawPromoGGR))}</div>
+          <div class="formula-plain">GGR earned from increased betting activity during the promo — before subtracting prize payouts.</div>
+        </div>
+        <div class="formula-block">
+          <div class="formula-name">Net GGR (after prizes)</div>
+          <div class="formula-eq">Gross Promo GGR − Total Prize Cost + Retention GGR<br><span class="op">= </span>${n(fmtMoney(rawPromoGGR))} − ${n(fmtMoney(totalPrizeCost))} + ${n(fmtMoney(retentionValue))} = ${r(fmtMoney(netPromoGGR))}</div>
+          <div class="formula-plain">The actual bottom-line GGR after accounting for prize payouts and the bonus value from retained players.</div>
+        </div>
+        <div class="formula-block">
+          <div class="formula-name">Promo ROI</div>
+          <div class="formula-eq">Net GGR Gain ÷ Total Prize Cost × 100<br><span class="op">= </span>${n(fmtMoney(ggrDelta))} ÷ ${n(fmtMoney(totalPrizeCost))} × 100 = ${r(roiDisplay)}</div>
+          <div class="formula-plain">For every $1 spent on prizes, how much additional GGR is generated. Above 100% means the promo more than pays for itself.</div>
+        </div>
+      </div>
+    </div>
+  `, 100);
+
+  // 4 — TWO COL: bars + cost breakdown
+  addSection(`
+    <div class="two-col">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-icon blue">📊</div>
+          <div class="card-title">Volume & Revenue Comparison</div>
+        </div>
+        <div class="card-body">
+          <div class="bar-section">
+            <div class="bar-section-title">Bet Volume</div>
+            <div class="bar-item">
+              <div class="bar-meta"><span class="bar-name">Baseline</span><span class="bar-num">${fmtMoney(baselineBetVol)}</span></div>
+              <div class="bar-track"><div class="bar-fill base" style="width:${(baselineBetVol/maxBet*100).toFixed(1)}%"></div></div>
+            </div>
+            <div class="bar-item">
+              <div class="bar-meta"><span class="bar-name">With Promo</span><span class="bar-num">${fmtMoney(totalPromoBetVol)}</span></div>
+              <div class="bar-track"><div class="bar-fill promo-b" style="width:${(totalPromoBetVol/maxBet*100).toFixed(1)}%"></div></div>
+            </div>
+          </div>
+          <div class="bar-section">
+            <div class="bar-section-title">Net GGR</div>
+            <div class="bar-item">
+              <div class="bar-meta"><span class="bar-name">Baseline</span><span class="bar-num">${fmtMoney(baselineGGR)}</span></div>
+              <div class="bar-track"><div class="bar-fill base" style="width:${(baselineGGR/maxGGR*100).toFixed(1)}%"></div></div>
+            </div>
+            <div class="bar-item">
+              <div class="bar-meta"><span class="bar-name">With Promo</span><span class="bar-num">${fmtMoney(netPromoGGR)}</span></div>
+              <div class="bar-track"><div class="bar-fill promo-g" style="width:${(Math.max(0,netPromoGGR)/maxGGR*100).toFixed(1)}%"></div></div>
+            </div>
+          </div>
+        </div>
+        <button class="formula-toggle"><span class="arrow">▶</span>&nbsp;&nbsp;Show calculation logic</button>
+        <div class="formula-drawer">
+          <div class="formula-block">
+            <div class="formula-name">Promo Bet Volume Split</div>
+            <div class="formula-eq">Promo players: ${n(fmt(promoPlayers))} × ${n(avgBets)} bets × ${n('$'+promoAvgBet.toFixed(2))} = ${r(fmtMoney(promoBetVol))}<br>Non-promo: ${n(fmt(nonPromoPlayers))} × ${n(avgBets)} × ${n('$'+avgBetAmount.toFixed(2))} = ${r(fmtMoney(nonPromoBetVol))}<br>Total = ${r(fmtMoney(totalPromoBetVol))}</div>
+            <div class="formula-plain">Promo players bet more per spin (bet uplift applied). Non-promo players bet at baseline. Both groups are summed for total volume.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-icon orange">🧾</div>
+          <div class="card-title">Cost & Revenue Breakdown</div>
+        </div>
+        <div class="card-body">
+          <div class="cost-list">
+            <div class="cost-item"><span class="cost-name">Banks configured</span><span class="cost-val">${fmt(numBanks)} × ${fmtMoney(bankAmount)}</span></div>
+            <div class="cost-item"><span class="cost-name">Players reaching threshold</span><span class="cost-val">${fmt(qualifyingPlayers)} <span class="tag ${qualifyingFrac>=0.5?'pos':'neg'}">${(qualifyingFrac*100).toFixed(0)}%</span></span></div>
+            <div class="cost-item"><span class="cost-name">Banks actually claimed</span><span class="cost-val">${fmt(prizesAwarded)} / ${fmt(numBanks)}</span></div>
+            <div class="cost-item"><span class="cost-name">Total prize payout</span><span class="cost-val" style="color:var(--red)">−${fmtMoney(totalPrizeCost)}</span></div>
+            <div class="cost-item"><span class="cost-name">GGR uplift (bet increase)</span><span class="cost-val" style="color:var(--green)">+${fmtMoney(rawPromoGGR - baselineGGR)}</span></div>
+            <div class="cost-item"><span class="cost-name">Retention bonus GGR</span><span class="cost-val" style="color:var(--green)">+${fmtMoney(retentionValue)}</span></div>
+            <div class="cost-item total"><span class="cost-name">Net GGR Gain</span><span class="cost-val">${ggrDelta >= 0 ? '+' : ''}${fmtMoney(ggrDelta)}</span></div>
+          </div>
+        </div>
+        <button class="formula-toggle"><span class="arrow">▶</span>&nbsp;&nbsp;Show calculation logic</button>
+        <div class="formula-drawer">
+          <div class="formula-block">
+            <div class="formula-name">Qualifying Player Rate</div>
+            <div class="formula-eq">min(Avg promo wager ÷ Threshold, 100%)<br><span class="op">= </span>min(${n(fmtMoney(avgPromoPlayerWager))} ÷ ${n('$'+betThreshold)}, 100%) = ${r((qualifyingFrac*100).toFixed(0)+'%')}</div>
+            <div class="formula-plain">If a promo player's expected total wager exceeds the threshold, they qualify. Capped at 100%.</div>
+          </div>
+          <div class="formula-block">
+            <div class="formula-name">Banks Awarded</div>
+            <div class="formula-eq">min(Qualifying players, Banks available)<br><span class="op">= </span>min(${n(fmt(qualifyingPlayers))}, ${n(fmt(numBanks))}) = ${r(fmt(prizesAwarded))}</div>
+            <div class="formula-plain">Banks are a finite resource. If more players qualify than banks exist, some players miss out.</div>
+          </div>
+          <div class="formula-block">
+            <div class="formula-name">GGR Uplift from Bet Increase</div>
+            <div class="formula-eq">(Promo Bet Vol − Baseline Bet Vol) × GGR Margin<br><span class="op">= </span>(${n(fmtMoney(totalPromoBetVol))} − ${n(fmtMoney(baselineBetVol))}) × ${n((ggrMargin*100).toFixed(1)+'%')} = ${r(fmtMoney(rawPromoGGR - baselineGGR))}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `, 150);
+
+  // 5 — INSIGHTS + FLOW
+  addSection(`
+    <div class="two-col">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-icon violet">💡</div>
+          <div class="card-title">Strategic Insights</div>
+        </div>
+        <div class="card-body">
+          <div class="insight-grid">
+            <div class="insight-item blue">
+              <div class="insight-title">🎯 Threshold Fit</div>
+              <div class="insight-body">${(qualifyingFrac*100).toFixed(0)}% of promo players hit the $${betThreshold} threshold. ${qualifyingFrac < 0.4 ? 'Consider lowering to boost participation.' : qualifyingFrac > 0.85 ? 'Very accessible — threshold may be too low.' : 'Good balance of challenge and reach.'}</div>
+            </div>
+            <div class="insight-item ${prizesAwarded === numBanks ? 'orange' : 'green'}">
+              <div class="insight-title">🏦 Bank Utilisation</div>
+              <div class="insight-body">${prizesAwarded === numBanks ? `All ${numBanks} banks claimed. High demand — consider adding more to increase reach.` : `${numBanks - prizesAwarded} banks unclaimed. Prize pool exceeds qualifying player count.`}</div>
+            </div>
+            <div class="insight-item green">
+              <div class="insight-title">📈 Bet Uplift Impact</div>
+              <div class="insight-body">+${(betUplift*100).toFixed(0)}% bet uplift across ${fmt(promoPlayers)} players adds ${fmtMoney(promoBetVol - promoPlayers * avgBets * avgBetAmount)} extra wagering.</div>
+            </div>
+            <div class="insight-item violet">
+              <div class="insight-title">🔁 Retention Value</div>
+              <div class="insight-body">${fmt(retainedPlayers)} retained players contribute ${fmtMoney(retentionValue)} forward-period GGR — ${((retentionValue / Math.max(1, Math.abs(ggrDelta)))*100).toFixed(0)}% of net gain.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-icon green">🔄</div>
+          <div class="card-title">Campaign Flow</div>
+        </div>
+        <div class="card-body">
+          <div class="flow-steps">
+            <div class="flow-step">
+              <div class="step-num">1</div>
+              <div class="step-body">
+                <div class="step-title">Campaign Goes Live</div>
+                <div class="step-text">${fmt(activePlayers)} active players are eligible. ${fmt(promoPlayers)} (${(participationRate*100).toFixed(0)}%) engage and start chasing the $${betThreshold} threshold.</div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="step-num">2</div>
+              <div class="step-body">
+                <div class="step-title">Bet Accumulation Phase</div>
+                <div class="step-text">Promo players increase avg bet to $${promoAvgBet.toFixed(2)} (+${(betUplift*100).toFixed(0)}%). Total wagering climbs to ${fmtMoney(totalPromoBetVol)}.</div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="step-num">3</div>
+              <div class="step-body">
+                <div class="step-title">Players Strike the Bank</div>
+                <div class="step-text">${fmt(qualifyingPlayers)} players qualify. ${fmt(prizesAwarded)} banks are struck for a total payout of ${fmtMoney(totalPrizeCost)}.</div>
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="step-num">4</div>
+              <div class="step-body">
+                <div class="step-title">Post-Campaign Results</div>
+                <div class="step-text">${fmt(retainedPlayers)} extra players retained. Net GGR gain: <strong>${fmtMoney(ggrDelta)}</strong>. ROI on promo spend: <strong>${roiDisplay}</strong>.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `, 200);
+
+  setTimeout(bindToggles, 250);
+}
+</script>
+</body>
+</html>
