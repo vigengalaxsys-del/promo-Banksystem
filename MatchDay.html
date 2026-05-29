@@ -707,6 +707,75 @@
   }
   :root.light #floatTip::after { border-top-color: #334155; }
   :root.light #floatTip.flip-down::after { border-bottom-color: #334155; border-top-color: transparent; }
+
+  /* ── DIFFICULTY SELECTOR ── */
+  .diff-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .diff-btn {
+    padding: 10px 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--navy);
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+    line-height: 1.4;
+  }
+  .diff-btn:hover { border-color: var(--muted); color: var(--text); }
+  .diff-btn.active { border-color: var(--accent); background: rgba(59,130,246,0.12); color: var(--text); }
+  .diff-btn .diff-label { font-weight: 500; }
+  .diff-btn .diff-sub {
+    display: block;
+    font-size: 9px;
+    color: var(--muted);
+    margin-top: 3px;
+    letter-spacing: 0;
+    text-transform: none;
+    font-family: var(--sans);
+    font-weight: 300;
+  }
+  .diff-btn.active .diff-sub { color: var(--accent2); }
+
+  /* Probability preview strip */
+  .prob-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    margin-top: 10px;
+  }
+  .prob-cell {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 7px 4px;
+    text-align: center;
+    transition: border-color 0.2s;
+  }
+  .prob-cell.active-tier { border-color: var(--accent); }
+  .prob-cell-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    margin-bottom: 4px;
+  }
+  .prob-cell-val {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1;
+  }
+
   @keyframes flashGreen {
     0% { color: var(--green); }
     100% { color: var(--text); }
@@ -827,6 +896,43 @@
             <option value="3" selected>3 matches</option>
             <option value="4">4 matches</option>
           </select>
+        </div>
+
+        <div class="field">
+          <label>
+            <span class="tip-wrap">Match Difficulty / Favourite Strength
+              <i class="tip-icon">?</i>
+              <span class="tip-box"><strong>Winning Probability Model</strong>Controls how likely players are to predict each match correctly. Higher favourite strength = more players get it right = higher cashback payout. Based on statistical models from the Galaxsys probability framework.<span class="tip-formula">Affects player count per tier in all calculations</span></span>
+            </span>
+          </label>
+          <div class="diff-grid">
+            <button class="diff-btn active" id="diff-low" onclick="setDifficulty('low')">
+              <span class="diff-label">⚖ Low</span>
+              <span class="diff-sub">Equal chances — no favourite (33% per outcome)</span>
+            </button>
+            <button class="diff-btn" id="diff-medium" onclick="setDifficulty('medium')">
+              <span class="diff-label">📈 Medium</span>
+              <span class="diff-sub">One team has ~70% chance to win</span>
+            </button>
+            <button class="diff-btn" id="diff-high" onclick="setDifficulty('high')">
+              <span class="diff-label">🔥 High</span>
+              <span class="diff-sub">One team has ~80% chance to win</span>
+            </button>
+            <button class="diff-btn" id="diff-mixed" onclick="setDifficulty('mixed')">
+              <span class="diff-label">🔀 Mixed</span>
+              <span class="diff-sub">Combination of favourite strengths</span>
+            </button>
+          </div>
+          <!-- Live probability preview: "at least k correct" for n=4 -->
+          <div style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">
+            Chance of ≥ k correct predictions (4 matches)
+          </div>
+          <div class="prob-strip" id="probStrip">
+            <div class="prob-cell" id="pc1"><div class="prob-cell-label">≥ 1</div><div class="prob-cell-val" id="pv1">—</div></div>
+            <div class="prob-cell" id="pc2"><div class="prob-cell-label">≥ 2</div><div class="prob-cell-val" id="pv2">—</div></div>
+            <div class="prob-cell" id="pc3"><div class="prob-cell-label">≥ 3</div><div class="prob-cell-val" id="pv3">—</div></div>
+            <div class="prob-cell" id="pc4"><div class="prob-cell-label">≥ 4</div><div class="prob-cell-val" id="pv4">—</div></div>
+          </div>
         </div>
 
         <div class="divider"></div>
@@ -1127,17 +1233,18 @@
   </div>
 
   <div class="foot-note">
-    <span>📌 Probability model assumes equal 1/3 per outcome (W1/X/W2) — conservative planning basis.</span>
+    <span>📌 Low difficulty uses equal 1/3 probability per outcome (W1/X/W2) — most conservative basis.</span>
+    <span>📌 Medium/High/Mixed use Galaxsys probability framework based on favourite strength.</span>
     <span>📌 Invoice rate default: 5% of net GGR. Adjust in Revenue Parameters.</span>
     <span>📌 Wagering requirements not available natively — casino may apply on their side.</span>
-    <span>📌 Session uplift figure is an industry estimate; actual results vary by partner.</span>
   </div>
 
 </div>
 
 <script>
 // ─── STATE ──────────────────────────────────────────────────────────
-let currentMode = 'easy';
+let currentMode       = 'easy';
+let currentDifficulty = 'low';
 
 const TIER_COLORS = ['#6366f1','#3b82f6','#22d3ee','#10b981'];
 
@@ -1145,9 +1252,89 @@ const MODES = {
   easy:    { matches:1, tiers:[5,    null, null, null] },
   medium:  { matches:3, tiers:[2,    5,    10,   null] },
   complex: { matches:4, tiers:[2.5,  10,   25,   100 ] },
-  custom:  { matches:4, tiers:[null, null, null, null] }  // preserves whatever is typed
+  custom:  { matches:4, tiers:[null, null, null, null] }
 };
 
+// Difficulty levels:
+//   p        = per-match probability that a player predicts correctly
+//   cumul4   = [P(≥1), P(≥2), P(≥3), P(≥4)] for exactly 4 matches (from Galaxsys framework)
+const DIFFICULTY = {
+  low:    { label:'Low',    p: 1/3,   cumul4: [80.25, 40.74, 11.11, 1.23]  },
+  medium: { label:'Medium', p: 0.70,  cumul4: [99.19, 91.63, 65.17, 24.01] },
+  high:   { label:'High',   p: 0.80,  cumul4: [99.84, 97.28, 81.92, 40.96] },
+  mixed:  { label:'Mixed',  p: 0.638, cumul4: [98.8,  87.4,  56.2,  16.8]  }
+};
+
+// Convert cumulative array [P(≥1)..P(≥n)] (as %) to exact [P(0)..P(n)]
+function cumulToExact(cumul) {
+  const c = cumul.map(x => x / 100);
+  const n = c.length;
+  const exact = [];
+  exact[0] = 1 - c[0];
+  for (let i = 0; i < n - 1; i++) exact[i + 1] = c[i] - c[i + 1];
+  exact[n] = c[n - 1];
+  return exact; // index = number correct, length = n+1
+}
+
+// Binomial coefficient
+function binom(n, k) {
+  if (k < 0 || k > n) return 0;
+  let r = 1;
+  for (let i = 0; i < k; i++) r = r * (n - i) / (i + 1);
+  return r;
+}
+
+// P(exactly k correct out of n matches) using per-match probability p
+function probBinom(n, k, p) {
+  return binom(n, k) * Math.pow(p, k) * Math.pow(1 - p, n - k);
+}
+
+// Get exact probability array [P(0), P(1), ... P(n)] for current difficulty and n matches
+function getExactProbs(n) {
+  const d = DIFFICULTY[currentDifficulty];
+  if (n === 4) {
+    // Use the precise framework values for 4 matches
+    return cumulToExact(d.cumul4);
+  }
+  // For n < 4, use binomial with per-match probability p
+  const arr = [];
+  for (let k = 0; k <= n; k++) arr[k] = probBinom(n, k, d.p);
+  return arr;
+}
+
+// ─── DIFFICULTY UI ───────────────────────────────────────────────────
+function setDifficulty(level) {
+  currentDifficulty = level;
+  document.querySelectorAll('.diff-btn').forEach(b =>
+    b.classList.toggle('active', b.id === 'diff-' + level)
+  );
+  updateProbStrip();
+  calc();
+}
+
+function updateProbStrip() {
+  const d = DIFFICULTY[currentDifficulty];
+  const n = parseInt(document.getElementById('numMatches').value) || 4;
+  const exact = getExactProbs(Math.min(n, 4));
+
+  // Compute cumulative P(≥k) for k=1..min(n,4)
+  for (let k = 1; k <= 4; k++) {
+    const el = document.getElementById('pv' + k);
+    const cell = document.getElementById('pc' + k);
+    if (k > n) {
+      el.textContent = '—';
+      el.style.color = 'var(--muted)';
+      cell.classList.remove('active-tier');
+    } else {
+      // sum exact[k..n]
+      let cum = 0;
+      for (let j = k; j <= Math.min(n, 4); j++) cum += (exact[j] || 0);
+      el.textContent = (cum * 100).toFixed(1) + '%';
+      el.style.color = cum > 0.5 ? 'var(--green)' : cum > 0.2 ? 'var(--amber)' : 'var(--text)';
+      cell.classList.toggle('active-tier', k <= n);
+    }
+  }
+}
 // Called when user manually edits a tier — silently switch to Custom mode tab
 function onTierEdit() {
   if (currentMode !== 'custom') {
@@ -1155,8 +1342,6 @@ function onTierEdit() {
     document.querySelectorAll('.mode-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === 'custom'));
   }
 }
-
-// ─── RANGE SYNC ─────────────────────────────────────────────────────
 function syncRange(id) {
   const r = document.getElementById('r' + id.charAt(0).toUpperCase() + id.slice(1));
   const i = document.getElementById(id);
@@ -1258,26 +1443,28 @@ function calc() {
   const totalGGR   = players * avgLoss;
   const invoice    = totalGGR * invoiceRate;
 
+  // Difficulty-aware exact probabilities [P(0), P(1), ... P(n)]
+  const exactProbs = getExactProbs(n);
+  updateProbStrip();
+
   // Per-tier calcs
   let totalExpectedPayout = 0;
-  let totalWorstCase = 0;
   const tierRows = [];
 
   // k=0 (no correct) — no reward
   {
-    const p0 = prob(n, 0);
+    const p0 = exactProbs[0] || 0;
     tierRows.push({ label:'0 correct', k:0, prob:p0, pct:0, avgCashback:0, totalPaid:0, color:'#374151' });
   }
 
   for (let k = 1; k <= n; k++) {
-    const p       = prob(n, k);
+    const p       = exactProbs[k] || 0;
     const pctRate = activeTiers[k-1];
     const rawCash = avgLoss * pctRate;
     const capped  = capPlayer > 0 ? Math.min(rawCash, capPlayer) : rawCash;
     const playersHit = players * p;
     const total   = playersHit * capped;
     totalExpectedPayout += total;
-    totalWorstCase      += players * capped; // worst: everyone at this tier
     tierRows.push({
       label: k === n ? `${k} correct ★` : `${k} correct`,
       k, prob:p, pct:pctRate, avgCashback:capped, totalPaid:total,
@@ -1285,7 +1472,7 @@ function calc() {
     });
   }
 
-  // Actually worst case is everyone predicts the top tier correctly
+  // Worst case: everyone hits the top tier
   const topTierCashback = capPlayer > 0 ? Math.min(avgLoss * (activeTiers[n-1]||0), capPlayer) : avgLoss * (activeTiers[n-1]||0);
   const worstCase = players * topTierCashback;
 
@@ -1603,6 +1790,7 @@ function toggleTheme() {
 
 // ─── INIT ─────────────────────────────────────────────────────────────
 setMode('medium');
+setDifficulty('low');
 </script>
 </body>
 </html>
