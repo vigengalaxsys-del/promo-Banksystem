@@ -1,0 +1,1608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Match Day — Promo Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:    #0b1120;
+    --panel:   #111827;
+    --card:    #1a2436;
+    --border:  #243047;
+    --accent:  #3b82f6;
+    --accent2: #22d3ee;
+    --green:   #10b981;
+    --amber:   #f59e0b;
+    --red:     #ef4444;
+    --text:    #e2e8f0;
+    --muted:   #64748b;
+    --mono:    'DM Mono', monospace;
+    --sans:    'DM Sans', sans-serif;
+    --display: 'Syne', sans-serif;
+  }
+
+  :root.light {
+    --navy:    #f0f4f8;
+    --panel:   #ffffff;
+    --card:    #f8fafc;
+    --border:  #cbd5e1;
+    --accent:  #2563eb;
+    --accent2: #0891b2;
+    --green:   #059669;
+    --amber:   #d97706;
+    --red:     #dc2626;
+    --text:    #1e293b;
+    --muted:   #64748b;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--navy);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.6;
+    overflow-x: hidden;
+    transition: background 0.25s, color 0.25s;
+  }
+
+  /* GRID BACKGROUND */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--grid-line, rgba(59,130,246,0.04)) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line, rgba(59,130,246,0.04)) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+    transition: background-image 0.25s;
+  }
+  :root.light body::before {
+    --grid-line: rgba(37,99,235,0.07);
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 24px 60px;
+  }
+
+  /* ── HEADER ── */
+  header {
+    padding: 40px 0 32px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 36px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .header-left {}
+  .header-tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .header-tag::before {
+    content: '';
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.7); }
+  }
+  h1 {
+    font-family: var(--display);
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    line-height: 1.1;
+  }
+  h1 span { color: var(--accent2); }
+  .header-sub {
+    margin-top: 6px;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 300;
+  }
+  .header-badge {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* ── LAYOUT ── */
+  .layout {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+
+  /* ── PANELS ── */
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: background 0.25s, border-color 0.25s;
+  }
+  .panel-head {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(0,0,0,0.02);
+  }
+  .panel-head-icon {
+    width: 28px; height: 28px;
+    background: rgba(59,130,246,0.15);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+  .panel-head-title {
+    font-family: var(--display);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: var(--text);
+    text-transform: uppercase;
+  }
+  .panel-body { padding: 20px; }
+
+  /* ── FORM CONTROLS ── */
+  .field { margin-bottom: 16px; }
+  .field:last-child { margin-bottom: 0; }
+  label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  label .hint {
+    font-family: var(--sans);
+    font-size: 11px;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--muted);
+    font-weight: 300;
+  }
+  input[type="number"], input[type="range"], select {
+    width: 100%;
+    font-family: var(--mono);
+    font-size: 14px;
+    background: var(--navy);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    padding: 9px 12px;
+    outline: none;
+    transition: border-color 0.15s;
+    appearance: none;
+  }
+  input[type="number"]:focus, select:focus {
+    border-color: var(--accent);
+  }
+  input[type="number"] { -moz-appearance: textfield; }
+  input[type="number"]::-webkit-inner-spin-button { display: none; }
+
+  input[type="range"] {
+    padding: 0;
+    height: 4px;
+    border: none;
+    border-radius: 2px;
+    background: var(--border);
+    cursor: pointer;
+    accent-color: var(--accent);
+    margin-top: 8px;
+  }
+  .range-row { display: flex; align-items: center; gap: 12px; }
+  .range-row input[type="range"] { flex: 1; }
+  .range-val {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent2);
+    min-width: 44px;
+    text-align: right;
+  }
+
+  select {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2364748b'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+  }
+
+  /* ── MATCH MODE TOGGLE ── */
+  .mode-tabs {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    margin-bottom: 20px;
+  }
+  .mode-tab {
+    padding: 8px 4px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .mode-tab:hover { border-color: var(--accent); color: var(--text); }
+  .mode-tab.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    font-weight: 500;
+  }
+
+  /* ── TIER INPUTS ── */
+  .tier-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .tier-item {
+    background: var(--navy);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    transition: border-color 0.15s, opacity 0.2s, box-shadow 0.15s;
+    cursor: text;
+    position: relative;
+  }
+  .tier-item:not([style*="pointer-events: none"]):hover { border-color: var(--muted); }
+  .tier-item:focus-within { border-color: var(--accent) !important; box-shadow: 0 0 0 2px rgba(59,130,246,0.15); }
+  .tier-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .tier-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .tier-item input {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text);
+    width: 100%;
+    cursor: text;
+  }
+  .tier-item input:focus { border: none; outline: none; }
+  .tier-unit {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .tier-edit-hint {
+    position: absolute;
+    top: 8px; right: 8px;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+    opacity: 0;
+    transition: opacity 0.15s;
+    pointer-events: none;
+  }
+  .tier-item:not([style*="pointer-events: none"]):hover .tier-edit-hint,
+  .tier-item:focus-within .tier-edit-hint { opacity: 1; }
+
+  /* ── DIVIDER ── */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 16px 0;
+  }
+
+  /* ── SECTION LABEL ── */
+  .section-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── RESULTS ── */
+  .results-stack { display: flex; flex-direction: column; gap: 16px; }
+
+  /* Summary cards row */
+  .summary-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  @media (max-width: 1100px) {
+    .summary-cards { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  .sum-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.25s, border-color 0.25s;
+  }
+  .sum-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--card-accent, var(--accent));
+    border-radius: 8px 8px 0 0;
+  }
+  .sum-card.green  { --card-accent: var(--green); }
+  .sum-card.amber  { --card-accent: var(--amber); }
+  .sum-card.red    { --card-accent: var(--red); }
+  .sum-card.cyan   { --card-accent: var(--accent2); }
+  .sum-card.blue   { --card-accent: var(--accent); }
+
+  .sum-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .sum-value {
+    font-family: var(--mono);
+    font-size: 24px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1;
+    margin-bottom: 4px;
+    transition: color 0.2s;
+  }
+  .sum-sub {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  /* Tier breakdown table */
+  .breakdown-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+  .breakdown-table th {
+    text-align: left;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 0 12px 10px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 500;
+  }
+  .breakdown-table th:not(:first-child) { text-align: right; }
+  .breakdown-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+    color: var(--text);
+    font-weight: 400;
+  }
+  .breakdown-table td:not(:first-child) { text-align: right; }
+  .breakdown-table tr:last-child td { border-bottom: none; }
+  .breakdown-table tr.total-row td {
+    border-top: 1px solid var(--border);
+    border-bottom: none;
+    color: var(--text);
+    font-weight: 500;
+    padding-top: 12px;
+  }
+  .breakdown-table tr:hover td { background: rgba(100,116,139,0.07); }
+  .tier-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .tier-badge-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* Payout bar chart */
+  .bar-chart { }
+  .bar-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .bar-row:last-child { margin-bottom: 0; }
+  .bar-name {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    width: 90px;
+    flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .bar-track {
+    flex: 1;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .bar-val {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text);
+    width: 52px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  /* Traffic light */
+  .verdict-bar {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--card);
+  }
+  .verdict-icon {
+    font-size: 28px;
+    flex-shrink: 0;
+  }
+  .verdict-title {
+    font-family: var(--display);
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 3px;
+  }
+  .verdict-text {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 300;
+    line-height: 1.5;
+  }
+  .verdict-bar.good  { border-color: rgba(16,185,129,0.35); background: rgba(16,185,129,0.05); }
+  .verdict-bar.warn  { border-color: rgba(245,158,11,0.35); background: rgba(245,158,11,0.05); }
+  .verdict-bar.bad   { border-color: rgba(239,68,68,0.35);  background: rgba(239,68,68,0.05);  }
+
+  /* Gauge */
+  .gauge-wrap {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .gauge-container { position: relative; width: 120px; height: 70px; flex-shrink: 0; }
+  canvas#gauge { display: block; }
+  .gauge-center {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    text-align: center;
+  }
+  .gauge-pct {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .gauge-lbl {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .gauge-stats { flex: 1; min-width: 160px; }
+  .gauge-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 12px;
+  }
+  .gauge-row:last-child { border: none; }
+  .gauge-row-label { color: var(--muted); font-size: 11px; }
+  .gauge-row-val { font-family: var(--mono); font-size: 12px; }
+
+  /* Toggle section */
+  .advanced-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    padding: 10px 0;
+    color: var(--muted);
+    font-size: 12px;
+    user-select: none;
+    transition: color 0.15s;
+  }
+  .advanced-toggle:hover { color: var(--text); }
+  .advanced-toggle-icon {
+    font-family: var(--mono);
+    font-size: 11px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 6px;
+    transition: all 0.15s;
+  }
+  .advanced-section { display: none; }
+  .advanced-section.open { display: block; }
+
+  /* Footer note */
+  .foot-note {
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .foot-note span { opacity: 0.7; }
+
+  /* Responsive right column */
+  .right-col { display: flex; flex-direction: column; gap: 16px; }
+
+  /* ── TOOLTIPS ── */
+  .tip-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .tip-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 1px solid var(--muted);
+    font-size: 9px;
+    font-family: var(--mono);
+    color: var(--muted);
+    cursor: help;
+    flex-shrink: 0;
+    transition: border-color 0.15s, color 0.15s;
+    line-height: 1;
+    font-style: normal;
+  }
+  .tip-icon:hover { border-color: var(--accent); color: var(--accent); }
+  /* tip-box stays in DOM as a data source only — never rendered inline */
+  .tip-box { display: none !important; }
+
+  /* Global floating tooltip rendered by JS into <body> */
+  #floatTip {
+    position: fixed;
+    z-index: 99999;
+    width: 240px;
+    background: #0f172a;
+    border: 1px solid #2d3f5a;
+    border-radius: 7px;
+    padding: 11px 14px;
+    font-family: var(--sans);
+    font-size: 11px;
+    line-height: 1.65;
+    color: #cbd5e1;
+    font-weight: 300;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.3);
+    pointer-events: none;
+    display: none;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  #floatTip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: var(--arrow-left, 50%);
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #2d3f5a;
+  }
+  #floatTip.flip-down::after {
+    top: auto; bottom: 100%;
+    border-top-color: transparent;
+    border-bottom-color: #2d3f5a;
+  }
+  #floatTip strong {
+    display: block;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 5px;
+    font-size: 11.5px;
+  }
+  #floatTip .tip-formula {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: #22d3ee;
+    margin-top: 6px;
+    padding: 4px 7px;
+    background: rgba(34,211,238,0.08);
+    border-radius: 3px;
+  }
+  :root.light #floatTip {
+    background: #1e293b;
+    border-color: #334155;
+    color: #e2e8f0;
+  }
+  :root.light #floatTip::after { border-top-color: #334155; }
+  :root.light #floatTip.flip-down::after { border-bottom-color: #334155; border-top-color: transparent; }
+  @keyframes flashGreen {
+    0% { color: var(--green); }
+    100% { color: var(--text); }
+  }
+  .updated { animation: flashGreen 0.6s ease-out forwards; }
+
+  /* ── THEME TOGGLE ── */
+  .theme-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: var(--panel);
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    transition: all 0.2s;
+    user-select: none;
+    white-space: nowrap;
+  }
+  .theme-toggle:hover { border-color: var(--accent); color: var(--text); }
+  .toggle-track {
+    width: 32px; height: 18px;
+    background: var(--border);
+    border-radius: 9px;
+    position: relative;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  .toggle-track.on { background: var(--accent); }
+  .toggle-thumb {
+    position: absolute;
+    top: 3px; left: 3px;
+    width: 12px; height: 12px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+  .toggle-track.on .toggle-thumb { transform: translateX(14px); }
+  .header-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-left">
+      <div class="header-tag">Galaxsys · Match Day</div>
+      <h1>Promo <span>Calculator</span></h1>
+      <div class="header-sub">Model payout outcomes, ROI and budget exposure for any partner configuration</div>
+    </div>
+    <div class="header-right">
+      <div class="header-badge">Internal AM Tool · v1.1</div>
+      <div class="theme-toggle" onclick="toggleTheme()" id="themeToggle">
+        <span id="themeIcon">☀️</span>
+        <div class="toggle-track" id="toggleTrack">
+          <div class="toggle-thumb"></div>
+        </div>
+        <span id="themeLabel">Light</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <!-- ── LEFT: INPUTS ─────────────────────────────────────── -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-head-icon">⚙</div>
+        <div class="panel-head-title">Promotion Parameters</div>
+      </div>
+      <div class="panel-body">
+
+        <!-- MODE -->
+        <div class="section-label">Promotion Mode</div>
+        <div class="mode-tabs" id="modeTabs">
+          <button class="mode-tab active" data-mode="easy"    onclick="setMode('easy')">Easy</button>
+          <button class="mode-tab"        data-mode="medium"  onclick="setMode('medium')">Medium</button>
+          <button class="mode-tab"        data-mode="complex" onclick="setMode('complex')">Complex</button>
+          <button class="mode-tab"        data-mode="custom"  onclick="setMode('custom')">Custom</button>
+        </div>
+
+        <!-- PLAYER INPUTS -->
+        <div class="section-label">Player Pool</div>
+
+        <div class="field">
+          <label>Active Players per Day</label>
+          <div class="range-row">
+            <input type="range" id="rPlayers" min="10" max="2000" step="10" value="100" oninput="syncRange('players')">
+            <span class="range-val" id="vPlayers">100</span>
+          </div>
+          <input type="number" id="players" value="100" min="1" oninput="syncInput('players'); calc()">
+        </div>
+
+        <div class="field">
+          <label>Avg Daily Net Loss per Player <span class="hint">(€)</span></label>
+          <div class="range-row">
+            <input type="range" id="rAvgLoss" min="5" max="500" step="5" value="50" oninput="syncRange('avgLoss')">
+            <span class="range-val" id="vAvgLoss">50</span>
+          </div>
+          <input type="number" id="avgLoss" value="50" min="1" oninput="syncInput('avgLoss'); calc()">
+        </div>
+
+        <div class="divider"></div>
+        <div class="section-label">Match Setup</div>
+
+        <div class="field">
+          <label>Number of Matches <span class="hint">(1–4)</span></label>
+          <select id="numMatches" onchange="applyMode(currentMode, true); calc()">
+            <option value="1">1 match</option>
+            <option value="2">2 matches</option>
+            <option value="3" selected>3 matches</option>
+            <option value="4">4 matches</option>
+          </select>
+        </div>
+
+        <div class="divider"></div>
+        <div class="section-label">Cashback Tiers <span style="color:var(--muted);font-size:9px;font-family:var(--sans);letter-spacing:0">% of net loss if N matches correct</span></div>
+
+        <div class="tier-grid" id="tierGrid">
+          <div class="tier-item" id="tierWrap1">
+            <span class="tier-edit-hint">✎ edit</span>
+            <div class="tier-label"><span class="tier-dot" style="background:#6366f1"></span>1 correct</div>
+            <input type="number" id="tier1" value="0" min="0" max="200" step="0.5" oninput="onTierEdit(); calc()">
+            <div class="tier-unit">% cashback</div>
+          </div>
+          <div class="tier-item" id="tierWrap2">
+            <span class="tier-edit-hint">✎ edit</span>
+            <div class="tier-label"><span class="tier-dot" style="background:#3b82f6"></span>2 correct</div>
+            <input type="number" id="tier2" value="0" min="0" max="200" step="0.5" oninput="onTierEdit(); calc()">
+            <div class="tier-unit">% cashback</div>
+          </div>
+          <div class="tier-item" id="tierWrap3">
+            <span class="tier-edit-hint">✎ edit</span>
+            <div class="tier-label"><span class="tier-dot" style="background:#22d3ee"></span>3 correct</div>
+            <input type="number" id="tier3" value="0" min="0" max="200" step="0.5" oninput="onTierEdit(); calc()">
+            <div class="tier-unit">% cashback</div>
+          </div>
+          <div class="tier-item" id="tierWrap4">
+            <span class="tier-edit-hint">✎ edit</span>
+            <div class="tier-label"><span class="tier-dot" style="background:#10b981"></span>4 correct</div>
+            <input type="number" id="tier4" value="0" min="0" max="200" step="0.5" oninput="onTierEdit(); calc()">
+            <div class="tier-unit">% cashback</div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="section-label">Budget Controls</div>
+
+        <div class="field">
+          <label><span class="tip-wrap">Per-Player Daily Cap <span class="hint">(€ max cashback per player)</span><i class="tip-icon">?</i><span class="tip-box"><strong>Per-Player Cap</strong>The maximum cashback any single player can receive in one day, regardless of their net loss or prediction result. Key lever for controlling budget exposure. Set to roughly 50–60% of your expected invoice per player for a self-funding promo.</span></span></label>
+          <input type="number" id="capPlayer" value="25" min="0" oninput="calc()">
+        </div>
+
+        <div class="field">
+          <label><span class="tip-wrap">Total Promotion Budget <span class="hint">(€ — BO ceiling, 0 = unlimited)</span><i class="tip-icon">?</i><span class="tip-box"><strong>Back Office Budget Ceiling</strong>The total pool set when creating the promo. Once this is exhausted no further cashbacks are issued that day. Enter 0 to model unlimited spend. Recommended: set to 2× the expected payout.</span></span></label>
+          <input type="number" id="budgetTotal" value="1000" min="0" oninput="calc()">
+        </div>
+
+        <div class="divider"></div>
+        <div class="section-label">Revenue Parameters</div>
+
+        <div class="field">
+          <label>Galaxsys Invoice Rate <span class="hint">(%  of net GGR)</span></label>
+          <div class="range-row">
+            <input type="range" id="rInvoice" min="1" max="15" step="0.5" value="5" oninput="syncRange('invoice')">
+            <span class="range-val" id="vInvoice">5%</span>
+          </div>
+          <input type="number" id="invoice" value="5" min="0.1" max="50" step="0.1" oninput="syncInput('invoice'); calc()">
+        </div>
+
+        <div class="field">
+          <label><span class="tip-wrap">Casino Co-Investment <span class="hint">(€ added to reward pool)</span><i class="tip-icon">?</i><span class="tip-box"><strong>Casino Marketing Contribution</strong>Budget committed by the casino partner from their own marketing spend. Added on top of the Galaxsys invoice to fund higher cashback tiers. Required for Complex mode at high player value.</span></span></label>
+          <input type="number" id="casinoInvest" value="0" min="0" oninput="calc()">
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── RIGHT: RESULTS ────────────────────────────────────── -->
+    <div class="right-col">
+
+      <!-- VERDICT -->
+      <div id="verdictBar" class="verdict-bar good">
+        <div class="verdict-icon" id="verdictIcon">✅</div>
+        <div>
+          <div class="verdict-title" id="verdictTitle">Commercially Viable</div>
+          <div class="verdict-text" id="verdictText">This configuration is self-funding within Galaxsys invoice margin. No casino co-investment required.</div>
+        </div>
+      </div>
+
+      <!-- SUMMARY CARDS -->
+      <div class="summary-cards">
+        <div class="sum-card cyan">
+          <div class="sum-label">
+            <span class="tip-wrap">Total GGR
+              <i class="tip-icon">?</i>
+              <span class="tip-box"><strong>Total Gross Gaming Revenue</strong>The total net losses across all active players for the day. This is the revenue base from which all other figures are derived.<span class="tip-formula">Players × Avg daily net loss</span></span>
+            </span>
+          </div>
+          <div class="sum-value" id="sGGR">€5,000</div>
+          <div class="sum-sub" id="sGGRsub">100 players × €50</div>
+        </div>
+        <div class="sum-card blue">
+          <div class="sum-label">
+            <span class="tip-wrap">Galaxsys Invoice
+              <i class="tip-icon">?</i>
+              <span class="tip-box"><strong>Galaxsys Revenue (Invoice)</strong>The portion of GGR that Galaxsys earns. This is our actual margin — the maximum we can commit to cashback before needing casino co-investment.<span class="tip-formula">GGR × Invoice rate (default 5%)</span></span>
+            </span>
+          </div>
+          <div class="sum-value" id="sInvoice">€250</div>
+          <div class="sum-sub" id="sInvoiceSub">5% of GGR</div>
+        </div>
+        <div class="sum-card amber">
+          <div class="sum-label">
+            <span class="tip-wrap">Expected Payout
+              <i class="tip-icon">?</i>
+              <span class="tip-box"><strong>Probability-Weighted Cashback</strong>The realistic total cashback cost, accounting for the fact that only some players will predict correctly. Much lower than worst-case because most players won't hit the top tier.<span class="tip-formula">Σ (players × prob(k) × capped cashback(k))</span></span>
+            </span>
+          </div>
+          <div class="sum-value" id="sPayout">€220</div>
+          <div class="sum-sub" id="sPayoutSub">blended across all players</div>
+        </div>
+        <div class="sum-card green" id="netCard">
+          <div class="sum-label">
+            <span class="tip-wrap">Net to Galaxsys
+              <i class="tip-icon">?</i>
+              <span class="tip-box"><strong>Galaxsys Net After Cashback</strong>What Galaxsys retains after paying out cashback. Positive = self-funding. Negative = casino co-investment required to cover the shortfall.<span class="tip-formula">Invoice + Casino pool − Expected payout</span></span>
+            </span>
+          </div>
+          <div class="sum-value" id="sNet">€30</div>
+          <div class="sum-sub" id="sNetSub">after cashback &amp; casino pool</div>
+        </div>
+      </div>
+
+      <!-- BREAKDOWN TABLE -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-head-icon">📊</div>
+          <div class="panel-head-title">Tier-by-Tier Breakdown</div>
+        </div>
+        <div class="panel-body" style="padding:0 0 8px">
+          <table class="breakdown-table">
+            <thead>
+              <tr>
+                <th><span class="tip-wrap tip-left">Tier<i class="tip-icon">?</i><span class="tip-box"><strong>Prediction Tier</strong>How many matches the player predicted correctly. ★ marks the top (jackpot) tier.</span></span></th>
+                <th><span class="tip-wrap tip-right">Players<i class="tip-icon">?</i><span class="tip-box"><strong>Players in This Tier</strong>Expected number of players who land on this tier, based on probability.<span class="tip-formula">Total players × Probability</span></span></span></th>
+                <th><span class="tip-wrap tip-right">Probability<i class="tip-icon">?</i><span class="tip-box"><strong>Statistical Probability</strong>Chance of getting exactly this many correct, assuming 1/3 probability per match outcome (W1/X/W2). Conservative equal-probability model.</span></span></th>
+                <th><span class="tip-wrap tip-right">Cashback %<i class="tip-icon">?</i><span class="tip-box"><strong>Tier Cashback Rate</strong>The % of net loss returned to the player if they land on this tier. Set in the Cashback Tiers inputs on the left.</span></span></th>
+                <th><span class="tip-wrap tip-right">Avg Cashback<i class="tip-icon">?</i><span class="tip-box"><strong>Average Per-Player Payout</strong>Expected cashback per player in this tier, after applying the per-player cap.<span class="tip-formula">min(avg loss × cashback%, cap)</span></span></span></th>
+                <th><span class="tip-wrap tip-right">Total Paid<i class="tip-icon">?</i><span class="tip-box"><strong>Total Cashback for This Tier</strong>Total budget consumed by players in this tier.<span class="tip-formula">Players in tier × Avg cashback</span></span></span></th>
+              </tr>
+            </thead>
+            <tbody id="tierBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- CHARTS ROW -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+
+        <!-- Bar chart -->
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-head-icon">📈</div>
+            <div class="panel-head-title">Payout by Tier</div>
+          </div>
+          <div class="panel-body">
+            <div class="bar-chart" id="barChart"></div>
+          </div>
+        </div>
+
+        <!-- Gauge / margin meter -->
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-head-icon">🎯</div>
+            <div class="panel-head-title">Margin Utilisation</div>
+          </div>
+          <div class="panel-body">
+            <div class="gauge-wrap">
+              <div class="gauge-container">
+                <canvas id="gauge" width="120" height="70"></canvas>
+                <div class="gauge-center">
+                  <div class="gauge-pct" id="gaugePct">88%</div>
+                  <div class="gauge-lbl"><span class="tip-wrap" style="justify-content:center">of invoice<i class="tip-icon">?</i><span class="tip-box"><strong>Margin Utilisation</strong>How much of the Galaxsys invoice margin is consumed by cashback. Under 80% = healthy. Over 100% = you need casino budget to cover the gap.</span></span></div>
+                </div>
+              </div>
+              <div class="gauge-stats">
+                <div class="gauge-row">
+                  <span class="gauge-row-label"><span class="tip-wrap">Invoice<i class="tip-icon">?</i><span class="tip-box"><strong>Galaxsys Invoice</strong>Our total revenue from this promotion day (GGR × invoice rate). This is the budget we can deploy for cashback.</span></span></span>
+                  <span class="gauge-row-val" id="gInvoice">€250</span>
+                </div>
+                <div class="gauge-row">
+                  <span class="gauge-row-label"><span class="tip-wrap">Cashback<i class="tip-icon">?</i><span class="tip-box"><strong>Expected Cashback Paid</strong>Probability-weighted total cashback payout. Capped by the BO budget ceiling if one is set.</span></span></span>
+                  <span class="gauge-row-val" id="gCashback">€220</span>
+                </div>
+                <div class="gauge-row">
+                  <span class="gauge-row-label"><span class="tip-wrap">Casino pool<i class="tip-icon">?</i><span class="tip-box"><strong>Casino Co-Investment</strong>Additional budget contributed by the casino partner from their marketing spend. Added to the Galaxsys invoice to form the total reward pool.</span></span></span>
+                  <span class="gauge-row-val" id="gCasino">€0</span>
+                </div>
+                <div class="gauge-row">
+                  <span class="gauge-row-label"><span class="tip-wrap">Retained<i class="tip-icon">?</i><span class="tip-box"><strong>Galaxsys Net Retained</strong>What remains after cashback is paid out. Green = profitable. Red = shortfall requiring casino budget support.<span class="tip-formula">Invoice + Casino pool − Cashback</span></span></span></span>
+                  <span class="gauge-row-val" id="gRetained" style="color:var(--green)">€30</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STRESS TEST -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-head-icon">⚠️</div>
+          <div class="panel-head-title">Worst-Case Exposure & Budget Coverage</div>
+        </div>
+        <div class="panel-body">
+          <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:16px">
+            <div>
+              <div class="sum-label" style="margin-bottom:6px">
+                <span class="tip-wrap">Worst-Case Payout<i class="tip-icon">?</i><span class="tip-box"><strong>Maximum Possible Exposure</strong>The total cashback cost if every single player correctly predicts the highest tier. Statistically near-impossible but defines your absolute ceiling.<span class="tip-formula">All players × Per-player cap (top tier)</span></span></span>
+              </div>
+              <div style="font-family:var(--mono);font-size:18px;color:var(--red)" id="worstCase">€2,500</div>
+              <div class="sum-sub">all players all-correct</div>
+            </div>
+            <div>
+              <div class="sum-label" style="margin-bottom:6px">
+                <span class="tip-wrap">Recommended Budget<i class="tip-icon">?</i><span class="tip-box"><strong>Suggested BO Budget Ceiling</strong>Set this as your total promotion budget in the Back Office. Covers normal statistical variance with headroom. When reached, no more cashback is issued.<span class="tip-formula">Expected payout × 2</span></span></span>
+              </div>
+              <div style="font-family:var(--mono);font-size:18px;color:var(--amber)" id="recBudget">€500</div>
+              <div class="sum-sub">2× expected payout</div>
+            </div>
+            <div>
+              <div class="sum-label" style="margin-bottom:6px">
+                <span class="tip-wrap">Budget Covers<i class="tip-icon">?</i><span class="tip-box"><strong>Budget vs. Worst Case</strong>How much of the absolute worst-case scenario your current BO budget ceiling covers. 100%+ means you're fully protected even if every player wins.<span class="tip-formula">BO budget ÷ Worst-case payout</span></span></span>
+              </div>
+              <div style="font-family:var(--mono);font-size:18px;color:var(--green)" id="budgetCovers">—</div>
+              <div class="sum-sub">of worst-case</div>
+            </div>
+          </div>
+          <!-- Budget consumption bar -->
+          <div class="section-label" style="margin-bottom:8px">
+            <span class="tip-wrap">Budget Utilisation<i class="tip-icon">?</i><span class="tip-box"><strong>Expected Spend vs. Budget</strong>How much of your BO budget ceiling the expected payout will consume. Under 50% = safe headroom. Over 80% = consider increasing the budget ceiling.<span class="tip-formula">Expected payout ÷ BO budget ceiling</span></span></span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+            <div class="bar-track" style="height:10px;border-radius:5px;">
+              <div class="bar-fill" id="budgetFill" style="background:var(--green);width:44%"></div>
+            </div>
+            <span class="bar-val" id="budgetPct" style="color:var(--green)">44%</span>
+          </div>
+          <div style="font-size:11px;color:var(--muted)">Expected payout as % of your BO budget ceiling</div>
+        </div>
+      </div>
+
+      <!-- ADVANCED -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-head-icon">🔬</div>
+          <div class="panel-head-title">Advanced: Retention ROI</div>
+        </div>
+        <div class="panel-body">
+          <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:12px">
+            <div>
+              <div class="sum-label" style="margin-bottom:4px">
+                <span class="tip-wrap">Session Uplift (est. +40%)<i class="tip-icon">?</i><span class="tip-box"><strong>Incremental GGR from Return Visits</strong>Players who submit a prediction tend to return later to check results — generating an additional session. Estimated at +40% extra daily sessions industry benchmark.<span class="tip-formula">GGR × 40% uplift × invoice rate</span></span></span>
+              </div>
+              <div style="font-family:var(--mono);font-size:16px;color:var(--accent2)" id="sessionUplift">+€200 GGR</div>
+              <div class="sum-sub">from prediction check-back visits</div>
+            </div>
+            <div>
+              <div class="sum-label" style="margin-bottom:4px">
+                <span class="tip-wrap">Net Promo ROI<i class="tip-icon">?</i><span class="tip-box"><strong>Total Return on Promotion</strong>The full picture: Galaxsys net margin plus the incremental invoice earned from return-visit sessions, minus the cashback paid out. Positive = the promo pays for itself.<span class="tip-formula">Net retained + Session uplift</span></span></span>
+              </div>
+              <div style="font-family:var(--mono);font-size:16px" id="promoROI">+€230</div>
+              <div class="sum-sub">net + session uplift − cashback</div>
+            </div>
+            <div>
+              <div class="sum-label" style="margin-bottom:4px">
+                <span class="tip-wrap">Blended Cashback Rate<i class="tip-icon">?</i><span class="tip-box"><strong>Actual Average Payout Rate</strong>The real cost of the promotion as a % of total GGR — accounting for the fact that most players won't predict correctly. This is what you actually pay, vs. the headline you advertise.<span class="tip-formula">Expected payout ÷ Total GGR</span></span></span>
+              </div>
+              <div style="font-family:var(--mono);font-size:16px;color:var(--amber)" id="blendedRate">4.4%</div>
+              <div class="sum-sub">actual vs. headline</div>
+            </div>
+            <div>
+              <div class="sum-label" style="margin-bottom:4px">
+                <span class="tip-wrap">Headline Offer<i class="tip-icon">?</i><span class="tip-box"><strong>Player-Facing Marketing Rate</strong>The maximum cashback % a player can win — what you advertise on the casino website. Always higher than the blended rate because it only applies to the top tier.</span></span>
+              </div>
+              <div style="font-family:var(--mono);font-size:16px;color:var(--green)" id="headlineOffer">10%</div>
+              <div class="sum-sub">what players see</div>
+            </div>
+          </div>
+          <div class="divider"></div>
+          <div style="font-size:11px;color:var(--muted);line-height:1.7">
+            ℹ  Session uplift estimated at 40% additional daily wager sessions from players returning to check prediction results (industry benchmark for prediction-gate promotions). Blended cashback rate reflects probability-weighted actual payout across all players.
+          </div>
+        </div>
+      </div>
+
+      <!-- PARTNER COPY GENERATOR -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-head-icon">📝</div>
+          <div class="panel-head-title">Auto-Generated Partner Copy</div>
+        </div>
+        <div class="panel-body">
+          <div id="partnerCopy" style="font-size:12px;line-height:1.8;color:var(--text);background:var(--navy);border:1px solid var(--border);border-radius:6px;padding:16px;font-family:var(--sans);white-space:pre-wrap"></div>
+          <button onclick="copyCopy()" style="margin-top:10px;padding:7px 16px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'" id="copyBtn">⧉ Copy to Clipboard</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="foot-note">
+    <span>📌 Probability model assumes equal 1/3 per outcome (W1/X/W2) — conservative planning basis.</span>
+    <span>📌 Invoice rate default: 5% of net GGR. Adjust in Revenue Parameters.</span>
+    <span>📌 Wagering requirements not available natively — casino may apply on their side.</span>
+    <span>📌 Session uplift figure is an industry estimate; actual results vary by partner.</span>
+  </div>
+
+</div>
+
+<script>
+// ─── STATE ──────────────────────────────────────────────────────────
+let currentMode = 'easy';
+
+const TIER_COLORS = ['#6366f1','#3b82f6','#22d3ee','#10b981'];
+
+const MODES = {
+  easy:    { matches:1, tiers:[5,    null, null, null] },
+  medium:  { matches:3, tiers:[2,    5,    10,   null] },
+  complex: { matches:4, tiers:[2.5,  10,   25,   100 ] },
+  custom:  { matches:4, tiers:[null, null, null, null] }  // preserves whatever is typed
+};
+
+// Called when user manually edits a tier — silently switch to Custom mode tab
+function onTierEdit() {
+  if (currentMode !== 'custom') {
+    currentMode = 'custom';
+    document.querySelectorAll('.mode-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === 'custom'));
+  }
+}
+
+// ─── RANGE SYNC ─────────────────────────────────────────────────────
+function syncRange(id) {
+  const r = document.getElementById('r' + id.charAt(0).toUpperCase() + id.slice(1));
+  const i = document.getElementById(id);
+  if (!r || !i) return;
+  i.value = r.value;
+  const v = document.getElementById('v' + id.charAt(0).toUpperCase() + id.slice(1));
+  if (v) v.textContent = id === 'invoice' ? r.value + '%' : r.value;
+  calc();
+}
+function syncInput(id) {
+  const i = document.getElementById(id);
+  const r = document.getElementById('r' + id.charAt(0).toUpperCase() + id.slice(1));
+  if (!i || !r) return;
+  r.value = i.value;
+  const v = document.getElementById('v' + id.charAt(0).toUpperCase() + id.slice(1));
+  if (v) v.textContent = id === 'invoice' ? i.value + '%' : i.value;
+}
+
+// ─── MODE ────────────────────────────────────────────────────────────
+function setMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
+  applyMode(mode, false);
+  calc();
+}
+
+function applyMode(mode, fromSelect) {
+  const cfg = MODES[mode];
+  if (mode === 'custom') {
+    // Custom: enable all 4 tiers, update match count, but never touch tier values
+    document.getElementById('numMatches').value = 4;
+    renderTierInputs(4, null);
+    return;
+  }
+  if (!fromSelect) {
+    // Mode tab clicked — update match count AND reset tier values
+    document.getElementById('numMatches').value = cfg.matches;
+    renderTierInputs(cfg.matches, cfg.tiers);
+  } else {
+    // Match count dropdown changed — keep existing tier values, just toggle active state
+    const n = parseInt(document.getElementById('numMatches').value) || 1;
+    renderTierInputs(n, null);
+  }
+}
+
+function renderTierInputs(n, defaults) {
+  for (let i = 1; i <= 4; i++) {
+    const wrap   = document.getElementById('tierWrap' + i);
+    const inp    = document.getElementById('tier' + i);
+    const active = i <= n;
+
+    // Update value only when defaults are explicitly provided (mode tab switch)
+    if (defaults) {
+      inp.value = (defaults[i - 1] !== undefined && defaults[i - 1] !== null)
+        ? defaults[i - 1]
+        : 0;
+    }
+
+    // Visual active / inactive state
+    wrap.style.opacity       = active ? '1' : '0.32';
+    wrap.style.pointerEvents = active ? '' : 'none';
+    wrap.title               = active ? '' : `Requires ${i} matches — increase match count to enable`;
+    inp.disabled             = !active;
+
+    // Zero out tiers that are now above match count (don't affect calc silently)
+    if (!active) inp.value = 0;
+  }
+}
+
+// ─── PROBABILITY ─────────────────────────────────────────────────────
+// Exact binomial for n matches, k correct, p=1/3
+function binom(n, k) {
+  if (k < 0 || k > n) return 0;
+  let r = 1;
+  for (let i = 0; i < k; i++) r = r * (n - i) / (i + 1);
+  return r;
+}
+function prob(n, k) {
+  return binom(n, k) * Math.pow(1/3, k) * Math.pow(2/3, n - k);
+}
+
+// ─── MAIN CALC ───────────────────────────────────────────────────────
+function calc() {
+  const players    = Math.max(1, parseFloat(document.getElementById('players').value) || 100);
+  const avgLoss    = Math.max(1, parseFloat(document.getElementById('avgLoss').value) || 50);
+  const invoiceRate= Math.max(0, parseFloat(document.getElementById('invoice').value) || 5) / 100;
+  const capPlayer  = Math.max(0, parseFloat(document.getElementById('capPlayer').value) || 0);
+  const budgetTotal= Math.max(0, parseFloat(document.getElementById('budgetTotal').value) || 0);
+  const casinoPool = Math.max(0, parseFloat(document.getElementById('casinoInvest').value) || 0);
+  const n          = parseInt(document.getElementById('numMatches').value) || 1;
+
+  const tiers = [];
+  for (let i = 1; i <= 4; i++) {
+    const el = document.getElementById('tier' + i);
+    tiers.push(el ? (parseFloat(el.value) || 0) / 100 : 0);
+  }
+  const activeTiers = tiers.slice(0, n);
+
+  const totalGGR   = players * avgLoss;
+  const invoice    = totalGGR * invoiceRate;
+
+  // Per-tier calcs
+  let totalExpectedPayout = 0;
+  let totalWorstCase = 0;
+  const tierRows = [];
+
+  // k=0 (no correct) — no reward
+  {
+    const p0 = prob(n, 0);
+    tierRows.push({ label:'0 correct', k:0, prob:p0, pct:0, avgCashback:0, totalPaid:0, color:'#374151' });
+  }
+
+  for (let k = 1; k <= n; k++) {
+    const p       = prob(n, k);
+    const pctRate = activeTiers[k-1];
+    const rawCash = avgLoss * pctRate;
+    const capped  = capPlayer > 0 ? Math.min(rawCash, capPlayer) : rawCash;
+    const playersHit = players * p;
+    const total   = playersHit * capped;
+    totalExpectedPayout += total;
+    totalWorstCase      += players * capped; // worst: everyone at this tier
+    tierRows.push({
+      label: k === n ? `${k} correct ★` : `${k} correct`,
+      k, prob:p, pct:pctRate, avgCashback:capped, totalPaid:total,
+      color: TIER_COLORS[k-1]
+    });
+  }
+
+  // Actually worst case is everyone predicts the top tier correctly
+  const topTierCashback = capPlayer > 0 ? Math.min(avgLoss * (activeTiers[n-1]||0), capPlayer) : avgLoss * (activeTiers[n-1]||0);
+  const worstCase = players * topTierCashback;
+
+  // Apply budget ceiling
+  const poolAvailable = invoice + casinoPool;
+  const actualPayout  = budgetTotal > 0 ? Math.min(totalExpectedPayout, budgetTotal) : totalExpectedPayout;
+  const netGalaxsys   = poolAvailable - actualPayout;
+
+  // Headline = highest non-zero tier %
+  const headlinePct = Math.max(...activeTiers) * 100;
+  const blendedPct  = totalGGR > 0 ? (totalExpectedPayout / totalGGR) * 100 : 0;
+
+  // Session uplift (40% extra wager session = 40% more net loss at same RTP)
+  const sessionUplift = totalGGR * 0.40 * invoiceRate;
+  const promoROI = netGalaxsys + sessionUplift;
+
+  // Rec budget
+  const recBudget = totalExpectedPayout * 2;
+  const budgetCoversPct = worstCase > 0 ? (budgetTotal / worstCase) * 100 : 100;
+  const budgetUtilPct   = budgetTotal > 0 ? Math.min((totalExpectedPayout / budgetTotal) * 100, 100) : 0;
+  const marginUtilPct   = invoice > 0 ? Math.min((actualPayout / invoice) * 100, 999) : 0;
+
+  // ── RENDER SUMMARY CARDS ──
+  document.getElementById('sGGR').textContent     = fmt(totalGGR);
+  document.getElementById('sGGRsub').textContent  = `${Math.round(players)} players × ${fmt(avgLoss)}`;
+  document.getElementById('sInvoice').textContent = fmt(invoice);
+  document.getElementById('sInvoiceSub').textContent = `${(invoiceRate*100).toFixed(1)}% of GGR`;
+  document.getElementById('sPayout').textContent  = fmt(actualPayout);
+  document.getElementById('sPayoutSub').textContent = budgetTotal > 0 && totalExpectedPayout > budgetTotal
+    ? `capped by BO budget (exp. ${fmt(totalExpectedPayout)})`
+    : `blended across all players`;
+
+  const netEl = document.getElementById('sNet');
+  netEl.textContent = (netGalaxsys >= 0 ? '+' : '') + fmt(netGalaxsys);
+  netEl.style.color = netGalaxsys >= 0 ? 'var(--green)' : 'var(--red)';
+  const netCard = document.getElementById('netCard');
+  netCard.style.setProperty('--card-accent', netGalaxsys >= 0 ? 'var(--green)' : 'var(--red)');
+
+  // ── TIER TABLE ──
+  const tbody = document.getElementById('tierBody');
+  tbody.innerHTML = '';
+  tierRows.forEach(row => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="tier-badge"><span class="tier-badge-dot" style="background:${row.color}"></span>${row.label}</span></td>
+      <td>${Math.round(players * row.prob)}</td>
+      <td>${(row.prob * 100).toFixed(1)}%</td>
+      <td>${row.pct > 0 ? (row.pct * 100).toFixed(1) + '%' : '—'}</td>
+      <td>${row.avgCashback > 0 ? fmt(row.avgCashback) : '—'}</td>
+      <td>${row.totalPaid > 0 ? fmt(row.totalPaid) : '€0'}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+  // totals row
+  const totTr = document.createElement('tr');
+  totTr.className = 'total-row';
+  totTr.innerHTML = `
+    <td>TOTAL</td>
+    <td>${Math.round(players)}</td>
+    <td>100%</td>
+    <td>${headlinePct > 0 ? 'up to ' + headlinePct.toFixed(1) + '%' : '—'}</td>
+    <td>${fmt(totalExpectedPayout / players)}</td>
+    <td style="color:var(--amber)">${fmt(totalExpectedPayout)}</td>
+  `;
+  tbody.appendChild(totTr);
+
+  // ── BAR CHART ──
+  const barEl = document.getElementById('barChart');
+  barEl.innerHTML = '';
+  const maxPaid = Math.max(...tierRows.map(r => r.totalPaid), 1);
+  tierRows.filter(r => r.k > 0).forEach(row => {
+    const pct = (row.totalPaid / maxPaid) * 100;
+    barEl.innerHTML += `
+      <div class="bar-row">
+        <div class="bar-name">${row.k} correct</div>
+        <div class="bar-track"><div class="bar-fill" style="background:${row.color};width:${pct}%"></div></div>
+        <div class="bar-val">${fmt(row.totalPaid)}</div>
+      </div>`;
+  });
+
+  // ── GAUGE ──
+  drawGauge(Math.min(marginUtilPct, 100));
+  document.getElementById('gaugePct').textContent = Math.round(Math.min(marginUtilPct,999)) + '%';
+  document.getElementById('gaugePct').style.color = marginUtilPct > 100 ? 'var(--red)' : marginUtilPct > 80 ? 'var(--amber)' : 'var(--green)';
+  document.getElementById('gInvoice').textContent   = fmt(invoice);
+  document.getElementById('gCashback').textContent  = fmt(actualPayout);
+  document.getElementById('gCasino').textContent    = fmt(casinoPool);
+  document.getElementById('gRetained').textContent  = (netGalaxsys >= 0 ? '+' : '') + fmt(netGalaxsys);
+  document.getElementById('gRetained').style.color  = netGalaxsys >= 0 ? 'var(--green)' : 'var(--red)';
+
+  // ── STRESS TEST ──
+  document.getElementById('worstCase').textContent  = fmt(worstCase);
+  document.getElementById('recBudget').textContent  = fmt(recBudget);
+  const covers = worstCase > 0 ? (budgetTotal / worstCase * 100) : 100;
+  document.getElementById('budgetCovers').textContent = Math.min(covers, 999).toFixed(0) + '% covered';
+  document.getElementById('budgetCovers').style.color = covers >= 100 ? 'var(--green)' : covers >= 50 ? 'var(--amber)' : 'var(--red)';
+
+  const bfill = document.getElementById('budgetFill');
+  const bpct  = document.getElementById('budgetPct');
+  bfill.style.width = Math.min(budgetUtilPct, 100) + '%';
+  bfill.style.background = budgetUtilPct > 80 ? 'var(--amber)' : 'var(--green)';
+  bpct.textContent = budgetUtilPct.toFixed(0) + '%';
+  bpct.style.color = budgetUtilPct > 80 ? 'var(--amber)' : 'var(--green)';
+
+  // ── ADVANCED ──
+  document.getElementById('sessionUplift').textContent = '+' + fmt(sessionUplift) + ' GGR';
+  document.getElementById('promoROI').textContent = (promoROI >= 0 ? '+' : '') + fmt(promoROI);
+  document.getElementById('promoROI').style.color = promoROI >= 0 ? 'var(--green)' : 'var(--red)';
+  document.getElementById('blendedRate').textContent = blendedPct.toFixed(2) + '%';
+  document.getElementById('headlineOffer').textContent = headlinePct > 0 ? 'Up to ' + headlinePct.toFixed(1) + '%' : 'N/A';
+
+  // ── VERDICT ──
+  const vb = document.getElementById('verdictBar');
+  const vi = document.getElementById('verdictIcon');
+  const vt = document.getElementById('verdictTitle');
+  const vx = document.getElementById('verdictText');
+  vb.className = 'verdict-bar';
+  if (netGalaxsys >= 0 && casinoPool === 0) {
+    vb.classList.add('good');
+    vi.textContent = '✅';
+    vt.textContent = 'Self-Funding — No Casino Budget Required';
+    vx.textContent = `Expected payout ${fmt(totalExpectedPayout)} is covered by Galaxsys invoice margin of ${fmt(invoice)}. Net retained: ${fmt(netGalaxsys)}. This configuration can be pitched to any partner at zero cost to them.`;
+  } else if (netGalaxsys >= 0 && casinoPool > 0) {
+    vb.classList.add('good');
+    vi.textContent = '✅';
+    vt.textContent = 'Viable with Casino Co-Investment';
+    vx.textContent = `Combined pool (invoice ${fmt(invoice)} + casino ${fmt(casinoPool)} = ${fmt(poolAvailable)}) covers expected payout. Net retained: ${fmt(netGalaxsys)}. Confirm partner budget commitment before launch.`;
+  } else if (netGalaxsys < 0 && netGalaxsys > -invoice * 0.5) {
+    vb.classList.add('warn');
+    vi.textContent = '⚠️';
+    vt.textContent = 'Marginal — Reduce Cap or Require Casino Co-Investment';
+    vx.textContent = `Shortfall: ${fmt(Math.abs(netGalaxsys))}. Options: lower per-player cap to ${fmt(capPlayer * 0.7)}, reduce cashback %, or ask casino to contribute ${fmt(Math.abs(netGalaxsys))} to the reward pool.`;
+  } else {
+    vb.classList.add('bad');
+    vi.textContent = '🚫';
+    vt.textContent = 'Not Viable — Casino Co-Investment Required';
+    vx.textContent = `Expected payout ${fmt(totalExpectedPayout)} exceeds Galaxsys invoice margin of ${fmt(invoice)} by ${fmt(Math.abs(netGalaxsys))}. This configuration requires ${fmt(Math.abs(netGalaxsys))} in casino marketing budget to be sustainable.`;
+  }
+
+  // ── PARTNER COPY ──
+  updatePartnerCopy(n, activeTiers, headlinePct, capPlayer, blendedPct, totalGGR, avgLoss, players);
+}
+
+// ─── PARTNER COPY ────────────────────────────────────────────────────
+function updatePartnerCopy(n, tiers, headlinePct, cap, blendedPct, ggr, avgLoss, players) {
+  const el = document.getElementById('partnerCopy');
+  const lines = [];
+  const mode = n === 1 ? 'Single Match' : n <= 3 ? 'Multi-Match' : 'World Cup Edition';
+  lines.push(`MATCH DAY — ${mode.toUpperCase()}`);
+  lines.push('');
+  if (headlinePct >= 50) {
+    lines.push(`Predict today's ${n} match${n>1?'es':''} correctly and win up to ${headlinePct.toFixed(0)}% cashback on your Galaxsys game losses — up to €${cap > 0 ? cap.toFixed(0) : '∞'} per day.`);
+  } else {
+    lines.push(`Predict today's match${n>1?'es':''} and earn up to ${headlinePct.toFixed(1)}% cashback on your daily net losses in Galaxsys games.`);
+  }
+  lines.push('');
+  lines.push('How it works:');
+  lines.push(`  1. Place your prediction${n>1?'s':''} — Home Win (W1), Draw (X), or Away Win (W2) — before kick-off.`);
+  lines.push(`  2. Play any eligible Galaxsys game throughout the day.`);
+  lines.push(`  3. Cashback is credited automatically at 00:00 UTC based on your results.`);
+  if (n > 1) {
+    lines.push('');
+    lines.push('Reward tiers:');
+    tiers.forEach((t, i) => {
+      if (t > 0) lines.push(`  ${i+1} correct prediction${i>0?'s':''} → ${(t*100).toFixed(1)}% cashback${cap>0?' (max €'+cap.toFixed(0)+')':''}`);
+    });
+  } else {
+    lines.push('');
+    lines.push(`Reward: ${(tiers[0]*100).toFixed(1)}% cashback on daily net loss${cap>0?' — up to €'+cap.toFixed(0):''}. Prediction must be correct.`);
+  }
+  lines.push('');
+  lines.push('Rules:');
+  lines.push('  • Predictions must be submitted before the first match begins.');
+  if (cap > 0) lines.push(`  • Maximum cashback: €${cap.toFixed(0)} per player per day.`);
+  lines.push('  • Cashback applies to net losses on eligible Galaxsys games only.');
+  lines.push('  • Results based on 90 minutes of play (no extra time).');
+  el.textContent = lines.join('\n');
+}
+
+function copyCopy() {
+  const el = document.getElementById('partnerCopy');
+  navigator.clipboard.writeText(el.textContent).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = '✓ Copied!';
+    btn.style.color = 'var(--green)';
+    btn.style.borderColor = 'var(--green)';
+    setTimeout(() => {
+      btn.textContent = '⧉ Copy to Clipboard';
+      btn.style.color = '';
+      btn.style.borderColor = '';
+    }, 2000);
+  });
+}
+
+// ─── GAUGE CANVAS ────────────────────────────────────────────────────
+function drawGauge(pct) {
+  const canvas = document.getElementById('gauge');
+  const ctx = canvas.getContext('2d');
+  const cx = 60, cy = 65, r = 50;
+  const startAngle = Math.PI;
+  const endAngle   = 2 * Math.PI;
+  const filled     = startAngle + (pct / 100) * Math.PI;
+  const color = pct > 100 ? '#ef4444' : pct > 80 ? '#f59e0b' : '#10b981';
+
+  ctx.clearRect(0, 0, 120, 70);
+
+  // Track
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, startAngle, endAngle);
+  ctx.strokeStyle = isLight ? '#cbd5e1' : '#243047';
+  ctx.lineWidth = 10;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  // Fill
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, startAngle, Math.min(filled, endAngle));
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 10;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+}
+
+// ─── FORMATTING ──────────────────────────────────────────────────────
+function fmt(n) {
+  if (isNaN(n)) return '€0';
+  const abs = Math.abs(n);
+  const sign = n < 0 ? '-' : '';
+  if (abs >= 1000000) return sign + '€' + (abs/1000000).toFixed(2) + 'M';
+  if (abs >= 1000) return sign + '€' + abs.toLocaleString('en', {minimumFractionDigits:0, maximumFractionDigits:0});
+  return sign + '€' + abs.toFixed(0);
+}
+
+// ─── THEME TOGGLE ────────────────────────────────────────────────────
+let isLight = false;
+function toggleTheme() {
+  isLight = !isLight;
+  document.documentElement.classList.toggle('light', isLight);
+  document.getElementById('toggleTrack').classList.toggle('on', isLight);
+  document.getElementById('themeIcon').textContent  = isLight ? '🌙' : '☀️';
+  document.getElementById('themeLabel').textContent = isLight ? 'Dark'  : 'Light';
+  // Redraw gauge with new background context
+  setTimeout(calc, 50);
+}
+
+// ─── FLOATING TOOLTIP ENGINE ─────────────────────────────────────────
+(function () {
+  // Create single global tooltip element
+  const tip = document.createElement('div');
+  tip.id = 'floatTip';
+  document.body.appendChild(tip);
+
+  const TIP_W = 240;
+  const TIP_OFFSET = 14; // px above cursor
+
+  function showTip(icon, e) {
+    const box = icon.nextElementSibling;
+    if (!box || !box.classList.contains('tip-box')) return;
+    tip.innerHTML = box.innerHTML;
+    tip.style.display = 'block';
+    tip.classList.remove('flip-down');
+    positionTip(e);
+  }
+
+  function positionTip(e) {
+    const tipH = tip.offsetHeight;
+    const vw   = window.innerWidth;
+    const vh   = window.innerHeight;
+
+    // Horizontal: centre on cursor, clamp to viewport
+    let x = e.clientX - TIP_W / 2;
+    x = Math.max(8, Math.min(x, vw - TIP_W - 8));
+
+    // Vertical: prefer above cursor
+    let y = e.clientY - tipH - TIP_OFFSET;
+    if (y < 8) {
+      // Not enough room above — flip below
+      y = e.clientY + TIP_OFFSET;
+      tip.classList.add('flip-down');
+    } else {
+      tip.classList.remove('flip-down');
+    }
+
+    // Arrow horizontal position: clamp so it stays inside tooltip
+    const arrowLeft = Math.max(12, Math.min(e.clientX - x, TIP_W - 12));
+    tip.style.setProperty('--arrow-left', arrowLeft + 'px');
+
+    tip.style.left = x + 'px';
+    tip.style.top  = y + 'px';
+  }
+
+  function hideTip() {
+    tip.style.display = 'none';
+  }
+
+  // Attach to all tip-icons (including ones added later by calc())
+  function bindTips() {
+    document.querySelectorAll('.tip-icon').forEach(icon => {
+      if (icon._tipBound) return;
+      icon._tipBound = true;
+      icon.addEventListener('mouseenter', (e) => showTip(icon, e));
+      icon.addEventListener('mousemove',  positionTip);
+      icon.addEventListener('mouseleave', hideTip);
+    });
+  }
+
+  // Re-bind after any DOM update (calc() regenerates table rows)
+  const _calc = window.calc;
+  window.calc = function () { _calc(); bindTips(); };
+
+  // Initial bind after page load
+  window.addEventListener('DOMContentLoaded', bindTips);
+  setTimeout(bindTips, 200);
+})();
+
+// ─── INIT ─────────────────────────────────────────────────────────────
+setMode('medium');
+</script>
+</body>
+</html>
